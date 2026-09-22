@@ -90,6 +90,10 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 .sayfa { max-width: 720px; margin: 0 auto; padding-inline: 16px; animation: sayfaGir .42s ease both; }
 @keyframes sayfaGir { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
+/* Karşılama sönerken menü altından hafifçe yükselir. */
+.sayfa--acildi { animation: menuGir .5s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes menuGir { from { opacity: .35; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+
 /* Arama/filtre sonrası liste yeniden kurulur; bölümler tek tek değil
    birlikte, kısa bir yükselişle gelir — liste "zıplamaz". */
 .govde--yeni > * { animation: listeGir .26s cubic-bezier(.2,.7,.3,1) both; }
@@ -1754,12 +1758,33 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       var el = e.target;
 
       if (el.closest("[data-giris-kapat]")) {
-        /* Karşılama yerinde sönsün, menü arkasından açılsın: tıklayınca
-           doğrudan menüye "ışınlanmak" sert duruyordu. */
+        /*
+         * Menü zaten karşılamanın ARKASINDA kurulu duruyor; yalnızca
+         * karşılama katmanını söndürüp kaldırıyoruz.
+         *
+         * Eskiden burada ciz() çağrılıyordu: bütün DOM baştan kuruluyor,
+         * yüz kart ve görsel yeniden oluşuyordu. Göz bunu "sayfa yenilendi"
+         * diye okuyordu.
+         */
         var giris = document.getElementById("girisEkrani");
         if (giris && !giris.classList.contains("cikiyor")) {
           giris.classList.add("cikiyor");
-          setTimeout(function () { self.durum.giris = false; self.ciz(); self.govdeyeOdaklan(); }, 300);
+          self.durum.giris = false;
+
+          var sayfa = self.kok.querySelector(".sayfa");
+          if (sayfa) {
+            sayfa.removeAttribute("inert");
+            sayfa.removeAttribute("aria-hidden");
+            /* Menü sönen karşılamanın altından hafifçe yükselerek gelsin. */
+            sayfa.classList.add("sayfa--acildi");
+            setTimeout(function () { sayfa.classList.remove("sayfa--acildi"); }, 600);
+          }
+          self.kaydirmaKilidi(false);
+
+          setTimeout(function () {
+            if (giris.parentNode) giris.parentNode.removeChild(giris);
+            self.govdeyeOdaklan();
+          }, 420);
           return;
         }
         self.durum.giris = false; self.ciz();
