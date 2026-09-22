@@ -1533,31 +1533,30 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
    * başlayınca) devreye girer — yoksa porsiyon tablosunu okurken kutu
    * kapanırdı.
    */
+  /**
+   * Kutuyu aşağı çekerek kapatma.
+   *
+   * Dokunmatik ve fare AYRI ele alınır. Daha önce ikisi de Pointer Events
+   * üzerinden yürüyordu; dokunmatikte `touchmove`'da preventDefault çağırmak
+   * tarayıcının o dokunuş için `pointercancel` göndermesine yol açıyor,
+   * bizim iptal işleyicimiz de jesti öldürüyordu. Sonuç: telefonda ne
+   * kapatma jesti çalışıyordu ne de kutunun kendi kaydırması.
+   */
   Motor.prototype.suruklemeyiBagla = function (kutu, ortu) {
-    if (!kutu || !window.PointerEvent) return;
+    if (!kutu) return;
     var self = this;
     /* Kaydırma kutunun kendisinde değil iç katmanda. */
     var kaydir = kutu.querySelector(".dt-kaydir") || kutu;
     var perde = ortu.querySelector(".dt-perde");
+
     var basY = 0, basX = 0, basScroll = 0, dy = 0;
     var aktif = false, karar = false, yon = "", tutamactan = false;
     var sonY = 0, sonZaman = 0, hiz = 0;
 
-    /* Yön kararı için eşik. 6 piksel fazla hassastı: kutuyu okumak için
-       parmağını dayayan kullanıcıda bile kapatma jesti tetikleniyordu. */
+    /* Yön kararı için eşik. */
     var ESIK = 8;
     /* iOS'ta esnek kaydırmadan sonra scrollTop tam 0'a oturmayabiliyor. */
     var UST_PAYI = 2;
-
-    /*
-     * Yazım doğrudan yapılır, requestAnimationFrame'e sarılmaz: tarayıcı
-     * pointermove'ları zaten kare hızında birleştiriyor, rAF ise sekme
-     * arka plana alındığında duruyor ve jest yarıda kalıyordu.
-     */
-    function kareyeYaz() {
-      kutu.style.transform = "translateY(" + dy + "px)";
-      if (perde) perde.style.opacity = String(1 - Math.min(1, dy / 320));
-    }
 
     function ustteMi() { return kaydir.scrollTop <= UST_PAYI; }
 
@@ -1568,90 +1567,79 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     ustSinifi();
     kaydir.addEventListener("scroll", ustSinifi, { passive: true });
 
-    kutu.addEventListener("pointerdown", function (e) {
-      if (e.button != null && e.button !== 0) return;
-      if (e.target.closest("[data-kapat]")) return;
+    function kareyeYaz() {
+      kutu.style.transform = "translateY(" + dy + "px)";
+      if (perde) perde.style.opacity = String(1 - Math.min(1, dy / 320));
+    }
 
-      tutamactan = !!e.target.closest("[data-tutamac]");
-      /* Sınıfı burada da tazeliyoruz: kaydırma olayı gecikirse touch-action
-         yanlış kalıp jesti tarayıcıya kaptırabiliyor. */
+    /* ---------------------------------------------------- jest çekirdeği */
+
+    function baslat(x, y, hedef) {
+      if (hedef && hedef.closest && hedef.closest("[data-kapat]")) return false;
+      tutamactan = !!(hedef && hedef.closest && hedef.closest("[data-tutamac]"));
       ustSinifi();
       /* İçerik aşağı kaydırılmışsa gövdeden çekmek kapatma değil okumadır. */
-      if (!tutamactan && !ustteMi()) return;
+      if (!tutamactan && !ustteMi()) return false;
 
       aktif = true; karar = false; yon = ""; dy = 0; hiz = 0;
-      basY = sonY = e.clientY; basX = e.clientX;
+      basY = sonY = y; basX = x;
       basScroll = kaydir.scrollTop;
       sonZaman = Date.now();
-    });
+      return true;
+    }
 
-    kutu.addEventListener("pointermove", function (e) {
-      if (!aktif) return;
-      var fark = e.clientY - basY;
+    /** `frenle` true dönerse çağıran preventDefault etmeli. */
+    function hareket(x, y) {
+      if (!aktif) return false;
+      var fark = y - basY;
 
       if (!karar) {
-        var yatay = Math.abs(e.clientX - basX);
+        var yatay = Math.abs(x - basX);
         if (Math.abs(fark) < ESIK) {
-          /*
-           * Henüz dikey eşik aşılmadı. Jesti BURADA İPTAL ETMİYORUZ:
-           * parmağını basılı tutan elin birkaç piksel yana kayması çok
-           * olağan ve eskiden bu, jesti kalıcı olarak öldürüyordu —
-           * kullanıcı parmağını kaldırmadan bir daha çekemiyordu.
-           * Yalnızca apaçık bir yana kaydırma jesti bırakılır.
-           */
-          if (yatay > 34 && yatay > Math.abs(fark) * 2) { aktif = false; }
-          return;
+          /* Parmağını basılı tutan elin birkaç piksel yana kayması olağan;
+             jesti burada öldürmüyoruz. Yalnızca apaçık bir yana kaydırma
+             bırakılır. */
+          if (yatay > 34 && yatay > Math.abs(fark) * 2) aktif = false;
+          return false;
         }
 
         karar = true;
         yon = fark > 0 ? "asagi" : "yukari";
         /* Sürükleme parmağın o anki yerinden başlasın; kutu eşik kadar
-           zıplayarak başlamasın. */
-        basY = e.clientY;
-        fark = 0;
-        sonY = e.clientY; sonZaman = Date.now(); hiz = 0;
+           zıplamasın. */
+        basY = sonY = y;
+        sonZaman = Date.now();
+        fark = 0; hiz = 0;
 
         if (yon === "asagi") {
-          /* Sürüklerken kutunun kendi kaydırması ve metin seçimi kapanır;
-             ikisi aynı anda çalışınca hareket takılıyordu. Fareyle
-             sürüklerken o ana kadar seçilmiş metin de bırakılır. */
           kutu.classList.add("suruklenir");
           var secim = window.getSelection && window.getSelection();
           if (secim && secim.removeAllRanges) secim.removeAllRanges();
-          if (kutu.setPointerCapture) {
-            try { kutu.setPointerCapture(e.pointerId); } catch (hata) { /* yoksay */ }
-          }
         }
       }
 
       if (yon === "yukari") {
-        /*
-         * En üstteyken `touch-action: none` olduğu için yukarı kaydırmayı da
-         * biz uygularız — yoksa kutu okunamaz hale gelirdi. İçerik bir kez
-         * kaydırılınca sınıf kalkar ve sonraki jestler tarayıcının normal,
-         * momentumlu kaydırmasına döner.
-         */
+        /* En üstteyken tarayıcının kaydırması kapalı (touch-action: none),
+           o yüzden yukarı kaydırmayı da biz uygularız. İçerik bir kez
+           kayınca sınıf kalkar ve sonraki jestler normal, momentumlu
+           kaydırmaya döner. */
         kaydir.scrollTop = basScroll - fark;
-        if (e.cancelable) e.preventDefault();
-        return;
+        return true;
       }
 
-      /* Hız, jestin tamamından değil SON hareketten ölçülür: yavaşça çekip
-         durduran kullanıcı, eskiden "hızlı fiske" sayılıp kutuyu kapatıyordu. */
-      var simdi = Date.now();
-      var gecen = simdi - sonZaman;
+      var simdi = Date.now(), gecen = simdi - sonZaman;
       if (gecen > 0) {
-        var anlik = (e.clientY - sonY) / gecen;
-        hiz = hiz * 0.6 + anlik * 0.4;     /* yumuşatılmış ortalama */
-        sonY = e.clientY; sonZaman = simdi;
+        var anlik = (y - sonY) / gecen;
+        hiz = hiz * 0.6 + anlik * 0.4;      /* yumuşatılmış ortalama */
+        sonY = y; sonZaman = simdi;
       }
 
       dy = Math.max(0, fark);
-      if (e.cancelable) e.preventDefault();
       kareyeYaz();
-    }, { passive: false });
+      return true;
+    }
 
-    var birak = function (e) {
+    function bitir() {
       if (!aktif) return;
       aktif = false;
       var suruklendi = karar && yon === "asagi";
@@ -1659,12 +1647,9 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       ustSinifi();
       if (!suruklendi) return;
 
-      if (e && e.pointerId != null && kutu.hasPointerCapture && kutu.hasPointerCapture(e.pointerId)) {
-        try { kutu.releasePointerCapture(e.pointerId); } catch (hata) { /* yoksay */ }
-      }
       kutu.classList.remove("suruklenir");
 
-      /* Eşik ekrana göre: küçük telefonda 64, büyük kutuda 110 piksel. */
+      /* Eşik ekrana göre: küçük telefonda 48, büyük kutuda 90 piksel. */
       var mesafeEsigi = Math.max(48, Math.min(90, kutu.clientHeight * 0.12));
       if (dy > mesafeEsigi || hiz > 0.35) {
         self.detayKapat(true);
@@ -1673,20 +1658,9 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
         if (perde) perde.style.opacity = "";
       }
       dy = 0; hiz = 0;
-    };
+    }
 
-    /*
-     * iOS Safari pointermove'daki preventDefault'u kaydirma icin dikkate
-     * almiyor; sayfa yine kayiyor ve jest yarida kaliyor. Dokunmatikte asil
-     * frene touchmove'dan basiyoruz.
-     */
-    kutu.addEventListener("touchmove", function (e) {
-      if (aktif && karar && e.cancelable) e.preventDefault();
-    }, { passive: false });
-
-    kutu.addEventListener("pointerup", birak);
-    kutu.addEventListener("pointercancel", function () {
-      /* Jest tarayıcıya kaptırıldıysa kutu yerine dönsün, yarı yolda kalmasın. */
+    function iptal() {
       if (aktif && karar && yon === "asagi") {
         kutu.style.transform = "";
         if (perde) perde.style.opacity = "";
@@ -1694,10 +1668,56 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       aktif = false; karar = false; yon = ""; dy = 0; hiz = 0;
       kutu.classList.remove("suruklenir");
       ustSinifi();
-    });
-    kutu.addEventListener("lostpointercapture", function () {
-      if (aktif && karar && yon === "asagi") birak(null);
-    });
+    }
+
+    /* ------------------------------------------------------- dokunmatik */
+
+    kutu.addEventListener("touchstart", function (e) {
+      if (e.touches.length !== 1) { iptal(); return; }
+      baslat(e.touches[0].clientX, e.touches[0].clientY, e.target);
+    }, { passive: true });
+
+    kutu.addEventListener("touchmove", function (e) {
+      if (!aktif) return;
+      if (e.touches.length !== 1) { iptal(); return; }
+      var t = e.touches[0];
+      /* Kendi işimizi yaptıysak sayfanın da kaymasını engelliyoruz.
+         iOS bu freni yalnızca touchmove'da tanıyor. */
+      if (hareket(t.clientX, t.clientY) && e.cancelable) e.preventDefault();
+    }, { passive: false });
+
+    kutu.addEventListener("touchend", function () { bitir(); });
+    kutu.addEventListener("touchcancel", function () { iptal(); });
+
+    /* ------------------------------------------------------- fare, kalem */
+
+    if (window.PointerEvent) {
+      kutu.addEventListener("pointerdown", function (e) {
+        if (e.pointerType === "touch") return;      /* dokunmatik yukarıda */
+        if (e.button != null && e.button !== 0) return;
+        if (baslat(e.clientX, e.clientY, e.target) && kutu.setPointerCapture) {
+          try { kutu.setPointerCapture(e.pointerId); } catch (hata) { /* yoksay */ }
+        }
+      });
+
+      kutu.addEventListener("pointermove", function (e) {
+        if (e.pointerType === "touch" || !aktif) return;
+        if (hareket(e.clientX, e.clientY) && e.cancelable) e.preventDefault();
+      }, { passive: false });
+
+      kutu.addEventListener("pointerup", function (e) {
+        if (e.pointerType === "touch") return;
+        if (e.pointerId != null && kutu.hasPointerCapture && kutu.hasPointerCapture(e.pointerId)) {
+          try { kutu.releasePointerCapture(e.pointerId); } catch (hata) { /* yoksay */ }
+        }
+        bitir();
+      });
+
+      kutu.addEventListener("pointercancel", function (e) {
+        if (e.pointerType === "touch") return;      /* dokunmatikte touchcancel var */
+        iptal();
+      });
+    }
   };
 
   /* -------------------------------------------------------- olaylar */
