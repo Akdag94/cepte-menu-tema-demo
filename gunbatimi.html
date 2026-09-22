@@ -343,6 +343,10 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 .dt-kaydir::-webkit-scrollbar { width: 6px; }
 .dt-kaydir::-webkit-scrollbar-thumb { background: var(--cizgi); border-radius: 999px; border: 0; }
 .dt-kaydir--ustte { touch-action: none; }
+/* Kutu en üstteyken basılı tutma, metin seçimi balonunu çıkarıp jesti
+   kesiyordu; orada seçimi kapatıyoruz. Kaydırıldıktan sonra metin yine
+   seçilebilir. */
+.dt-kaydir--ustte { -webkit-touch-callout: none; }
 /*
  * Sürükleme sırasında: geçiş kapanır (parmağı anlık takip etsin), kutunun
  * kendi kaydırması ve metin seçimi durur. Üçü aynı anda açıkken hareket
@@ -378,6 +382,9 @@ button:active, .filtre-oge:active { transform: scale(.975); }
  * sürüklemenin güvenli tutma yeri. Fare/masaüstünde gereksiz: gizlenir.
  */
 .dt-tutamac {
+  /* Basılı tutunca çıkan metin seçimi ve bağlam menüsü jesti bozuyordu. */
+  user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none;
   /* Sadece ortadaki şerit kadar yer kaplar: tüm genişliği kaplasaydı
      kapatma düğmesinin üstüne binip tıklamayı yutardı. */
   position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 3;
@@ -1550,7 +1557,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
     /* Yön kararı için eşik. 6 piksel fazla hassastı: kutuyu okumak için
        parmağını dayayan kullanıcıda bile kapatma jesti tetikleniyordu. */
-    var ESIK = 10;
+    var ESIK = 8;
     /* iOS'ta esnek kaydırmadan sonra scrollTop tam 0'a oturmayabiliyor. */
     var UST_PAYI = 2;
 
@@ -1595,12 +1602,26 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       var fark = e.clientY - basY;
 
       if (!karar) {
-        if (Math.abs(fark) < ESIK && Math.abs(e.clientX - basX) < ESIK) return;
-        /* Yana gidiyorsa bu jest bizim değil. */
-        if (Math.abs(e.clientX - basX) > Math.abs(fark)) { aktif = false; return; }
+        var yatay = Math.abs(e.clientX - basX);
+        if (Math.abs(fark) < ESIK) {
+          /*
+           * Henüz dikey eşik aşılmadı. Jesti BURADA İPTAL ETMİYORUZ:
+           * parmağını basılı tutan elin birkaç piksel yana kayması çok
+           * olağan ve eskiden bu, jesti kalıcı olarak öldürüyordu —
+           * kullanıcı parmağını kaldırmadan bir daha çekemiyordu.
+           * Yalnızca apaçık bir yana kaydırma jesti bırakılır.
+           */
+          if (yatay > 34 && yatay > Math.abs(fark) * 2) { aktif = false; }
+          return;
+        }
 
         karar = true;
         yon = fark > 0 ? "asagi" : "yukari";
+        /* Sürükleme parmağın o anki yerinden başlasın; kutu eşik kadar
+           zıplayarak başlamasın. */
+        basY = e.clientY;
+        fark = 0;
+        sonY = e.clientY; sonZaman = Date.now(); hiz = 0;
 
         if (yon === "asagi") {
           /* Sürüklerken kutunun kendi kaydırması ve metin seçimi kapanır;
@@ -1656,8 +1677,8 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       kutu.classList.remove("suruklenir");
 
       /* Eşik ekrana göre: küçük telefonda 64, büyük kutuda 110 piksel. */
-      var mesafeEsigi = Math.max(64, Math.min(110, kutu.clientHeight * 0.16));
-      if (dy > mesafeEsigi || hiz > 0.45) {
+      var mesafeEsigi = Math.max(48, Math.min(90, kutu.clientHeight * 0.12));
+      if (dy > mesafeEsigi || hiz > 0.35) {
         self.detayKapat(true);
       } else {
         kutu.style.transform = "";
