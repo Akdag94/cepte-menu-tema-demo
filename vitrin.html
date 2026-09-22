@@ -288,7 +288,10 @@ button:active, .filtre-oge:active { transform: scale(.975); }
   width: 100%; max-width: 480px;
   /* dvh'yi anlamayan eski taraycilar vh yedegini kullanir. */
   max-height: 92vh; max-height: 92dvh;
-  overflow-y: auto;
+  /* Kaydırma .dt-kaydir'da; kutu sabit kalır ki tutamaç ve kapatma
+     düğmesi içerikle birlikte kayıp gitmesin. */
+  overflow: hidden;
+  display: flex; flex-direction: column;
   background: var(--yuzey); color: var(--murekkep);
   border-radius: 22px 22px 0 0;
   box-shadow: var(--golge);
@@ -300,11 +303,6 @@ button:active, .filtre-oge:active { transform: scale(.975); }
    * hem kapanış paylaşır.
    */
   transform: translateY(100%); opacity: 0;
-  /* Kutunun sonuna gelince kaydırma arkadaki menüye geçmesin. */
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  /* Kutu kaydırılmışken normal dikey kaydırma tarayıcının işi. */
-  touch-action: pan-y;
   transition: transform .24s cubic-bezier(.2,.8,.3,1), opacity .2s ease;
   will-change: transform;
 }
@@ -315,7 +313,19 @@ button:active, .filtre-oge:active { transform: scale(.975); }
  * `pointercancel` ile kesiyordu: aşağı çekerek kapatmak gerçek telefonda
  * tutmuyordu. Bu durumda iki yönü de motor yönetir (bkz. suruklemeyiBagla).
  */
-.dt-kutu--ustte { touch-action: none; }
+.dt-kaydir {
+  flex: 1 1 auto; min-height: 0;
+  overflow-y: auto;
+  /* Kutunun sonuna gelince kaydırma arkadaki menüye geçmesin. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Kaydırılmış durumdayken dikey kaydırma tarayıcının işi. */
+  touch-action: pan-y;
+  scrollbar-width: thin; scrollbar-color: var(--cizgi) transparent;
+}
+.dt-kaydir::-webkit-scrollbar { width: 6px; }
+.dt-kaydir::-webkit-scrollbar-thumb { background: var(--cizgi); border-radius: 999px; border: 0; }
+.dt-kaydir--ustte { touch-action: none; }
 /*
  * Sürükleme sırasında: geçiş kapanır (parmağı anlık takip etsin), kutunun
  * kendi kaydırması ve metin seçimi durur. Üçü aynı anda açıkken hareket
@@ -323,22 +333,18 @@ button:active, .filtre-oge:active { transform: scale(.975); }
  */
 .dt-kutu.suruklenir {
   transition: none;
-  overflow-y: hidden;
-  touch-action: none;
   user-select: none; -webkit-user-select: none;
   cursor: grabbing;
 }
-/* Kaydırma kapanınca çubuk kadar yer boşalıp içerik zıplamasın. */
-.dt-kutu { scrollbar-gutter: stable; }
+/* Sürüklerken iç kaydırma da durur; ikisi aynı anda takılma yapıyordu. */
+.dt-kutu.suruklenir .dt-kaydir { overflow-y: hidden; touch-action: none; }
+.dt-kaydir { scrollbar-gutter: stable; }
 .dt-kutu:focus { outline: none; }
 /* Geniş ekranda kutu ortada durur; oradan tam boy aşağı kaymak yerine
    kısa bir yükseliş daha doğru duruyor. */
 @media (min-width: 560px) { .dt-kutu { border-radius: 22px; transform: translateY(26px); } }
 
-/* Kutunun kendi kaydırma çubuğu, kutunun köşelerine yakışsın. */
-.dt-kutu { scrollbar-width: thin; scrollbar-color: var(--cizgi) transparent; }
-.dt-kutu::-webkit-scrollbar { width: 6px; }
-.dt-kutu::-webkit-scrollbar-thumb { background: var(--cizgi); border-radius: 999px; border: 0; }
+
 
 /*
  * Telefonda kapatma düğmesi ekranın tepesinde kalıyor ve başparmakla zor
@@ -386,7 +392,7 @@ button:active, .filtre-oge:active { transform: scale(.975); }
   .dt-gorsel img { position: static; }
 }
 /* Görselsiz kutuda tutamaç ile ilk satır çakışmasın. */
-.dt-kutu--yazi .dt-govde { padding-top: 34px; }
+.dt-kutu--yazi .dt-govde { padding-top: 40px; }
 .dt-gorsel img { width: 100%; height: 100%; object-fit: cover; }
 .dt-govde {
   padding: 18px 18px 26px;
@@ -1137,13 +1143,16 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       '<div class="dt-tutamac" data-tutamac aria-hidden="true"><span></span></div>' +
       '<button class="dt-kapat" type="button" data-kapat aria-label="' + kacir(sz.kapat) + '">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
-      '</button>' + gorsel +
+      '</button>' +
+      /* Kaydırma bu iç katmanda: kutu sabit kaldığı için yukarıdaki tutamaç
+         ve kapatma düğmesi içerikle birlikte kayıp gitmiyor. */
+      '<div class="dt-kaydir">' + gorsel +
       '<div class="dt-govde">' +
         (rozet ? '<div class="rozetler">' + rozet + '</div>' : "") +
         '<div class="dt-ust"><h3>' + kacir(t.ad) + '</h3><span class="dt-tutar">' + kacir(fiyatMetni(u, sz)) + '</span></div>' +
         (t.desc ? '<p class="dt-aciklama">' + kacir(t.desc) + '</p>' : "") +
         porsiyon + kcal + alerjen +
-      '</div></div>';
+      '</div></div></div>';
   };
 
   /* ------------------------------------------------------ filtre paneli */
@@ -1468,6 +1477,8 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
   Motor.prototype.suruklemeyiBagla = function (kutu, ortu) {
     if (!kutu || !window.PointerEvent) return;
     var self = this;
+    /* Kaydırma kutunun kendisinde değil iç katmanda. */
+    var kaydir = kutu.querySelector(".dt-kaydir") || kutu;
     var basY = 0, basX = 0, basScroll = 0, dy = 0;
     var aktif = false, karar = false, yon = "", tutamactan = false;
     var sonY = 0, sonZaman = 0, hiz = 0;
@@ -1478,14 +1489,14 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     /* iOS'ta esnek kaydırmadan sonra scrollTop tam 0'a oturmayabiliyor. */
     var UST_PAYI = 2;
 
-    function ustteMi() { return kutu.scrollTop <= UST_PAYI; }
+    function ustteMi() { return kaydir.scrollTop <= UST_PAYI; }
 
     function ustSinifi() {
-      if (ustteMi()) kutu.classList.add("dt-kutu--ustte");
-      else kutu.classList.remove("dt-kutu--ustte");
+      if (ustteMi()) kaydir.classList.add("dt-kaydir--ustte");
+      else kaydir.classList.remove("dt-kaydir--ustte");
     }
     ustSinifi();
-    kutu.addEventListener("scroll", ustSinifi, { passive: true });
+    kaydir.addEventListener("scroll", ustSinifi, { passive: true });
 
     kutu.addEventListener("pointerdown", function (e) {
       if (e.button != null && e.button !== 0) return;
@@ -1500,7 +1511,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
       aktif = true; karar = false; yon = ""; dy = 0; hiz = 0;
       basY = sonY = e.clientY; basX = e.clientX;
-      basScroll = kutu.scrollTop;
+      basScroll = kaydir.scrollTop;
       sonZaman = Date.now();
     });
 
@@ -1536,7 +1547,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
          * kaydırılınca sınıf kalkar ve sonraki jestler tarayıcının normal,
          * momentumlu kaydırmasına döner.
          */
-        kutu.scrollTop = basScroll - fark;
+        kaydir.scrollTop = basScroll - fark;
         if (e.cancelable) e.preventDefault();
         return;
       }
