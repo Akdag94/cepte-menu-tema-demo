@@ -87,12 +87,14 @@ button:active, .filtre-oge:active { transform: scale(.975); }
   clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
-.sayfa { max-width: 720px; margin: 0 auto; padding-inline: 16px; animation: sayfaGir .42s ease both; }
-@keyframes sayfaGir { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-
-/* Karşılama sönerken menü altından hafifçe yükselir. */
-.sayfa--acildi { animation: menuGir .5s cubic-bezier(.2,.7,.3,1) both; }
-@keyframes menuGir { from { opacity: .35; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+/*
+ * .sayfa'ya BİLEREK açılış animasyonu verilmiyor. Bin öğeden fazla taşıyan
+ * bu ağacı opacity+transform ile canlandırmak telefonda takılma yapıyordu;
+ * üstelik karşılama kapanıp `inert` kalktığı anda animasyon yeniden
+ * tetikleniyor, yani tam menüye geçerken. Girişi kartların kendi kademeli
+ * animasyonu (kartGir) zaten anlatıyor.
+ */
+.sayfa { max-width: 720px; margin: 0 auto; padding-inline: 16px; }
 
 /* Arama/filtre sonrası liste yeniden kurulur; bölümler tek tek değil
    birlikte, kısa bir yükselişle gelir — liste "zıplamaz". */
@@ -103,13 +105,24 @@ button:active, .filtre-oge:active { transform: scale(.975); }
  * Ürün kartları belirirken de sönümlenerek gelsin. Kartlar sırayla, çok
  * küçük gecikmelerle açılır; hepsi aynı anda "patlamaz".
  */
-.urunler > * { animation: kartGir .34s cubic-bezier(.2,.7,.3,1) both; }
-.urunler > *:nth-child(1) { animation-delay: .02s; }
-.urunler > *:nth-child(2) { animation-delay: .05s; }
-.urunler > *:nth-child(3) { animation-delay: .08s; }
-.urunler > *:nth-child(4) { animation-delay: .11s; }
-.urunler > *:nth-child(5) { animation-delay: .14s; }
-.urunler > *:nth-child(n+6) { animation-delay: .16s; }
+/*
+ * Animasyon YALNIZCA ilk birkaç karta. Menüde yüzden fazla kart var ve
+ * hepsine giriş animasyonu vermek, ekranda görünmeyenler dahil doksandan fazla
+ * canlandırmayı aynı anda çalıştırmak demekti (her kategorinin kendi kart
+ * listesi var); telefonda menüye geçiş bu yüzden takılıyordu. Animasyon
+ * yalnızca ilk bölümün ilk kartlarında. Görünmeyen kartların animasyonu zaten kimseye
+ * görünmüyor; onlar kaydırıldıkça görselleriyle birlikte sönümlenerek
+ * geliyor.
+ */
+.bolum:first-child .urunler:first-of-type > *:nth-child(-n+6) {
+  animation: kartGir .34s cubic-bezier(.2,.7,.3,1) both;
+}
+.bolum:first-child .urunler:first-of-type > *:nth-child(1) { animation-delay: .02s; }
+.bolum:first-child .urunler:first-of-type > *:nth-child(2) { animation-delay: .05s; }
+.bolum:first-child .urunler:first-of-type > *:nth-child(3) { animation-delay: .08s; }
+.bolum:first-child .urunler:first-of-type > *:nth-child(4) { animation-delay: .11s; }
+.bolum:first-child .urunler:first-of-type > *:nth-child(5) { animation-delay: .14s; }
+.bolum:first-child .urunler:first-of-type > *:nth-child(6) { animation-delay: .16s; }
 @keyframes kartGir { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
 /*
@@ -120,13 +133,14 @@ button:active, .filtre-oge:active { transform: scale(.975); }
  * hiç çalışmazsa (çok eski cihaz, hata, kapalı JS) görseller saydam takılı
  * kalmasın, olduğu gibi görünsün.
  */
-.js-hazir .kart-gorsel img, .js-hazir .satir-gorsel,
-.js-hazir .kutu-gorsel img, .js-hazir .dt-gorsel img {
-  opacity: 0;
-  transition: opacity .32s ease;
-}
-.js-hazir .kart-gorsel img.yuklendi, .js-hazir .satir-gorsel.yuklendi,
-.js-hazir .kutu-gorsel img.yuklendi, .js-hazir .dt-gorsel img.yuklendi { opacity: 1; }
+/*
+ * Görseller VARSAYILAN OLARAK GÖRÜNÜR. Yüklenen görsel bir kerelik
+ * animasyonla sönümlenerek girer. Daha önce başlangıç değeri opacity:0'dı;
+ * geçiş herhangi bir sebeple takılırsa (betik hatası, donmuş sekme)
+ * görseller hiç görünmüyordu.
+ */
+.js-hazir img.yeni-yuklendi { animation: gorselGir .32s ease both; }
+@keyframes gorselGir { from { opacity: 0; } to { opacity: 1; } }
 .govde { padding-block: 8px 48px; }
 .bos { padding: 56px 0; text-align: center; color: var(--sessiz); }
 
@@ -844,13 +858,15 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     return s + " ₺";
   }
 
-  /** Ürünün fiyat metni: tek fiyat ya da aralık. 0 fiyat "İkram" sayılır. */
+  /**
+   * Ürünün fiyat metni. BİLEREK tek değer: aralık göstermek kartta iki
+   * fiyat yazıyormuş gibi duruyordu. Porsiyonların ayrı fiyatları ürün
+   * detayındaki porsiyon tablosunda zaten satır satır yazıyor.
+   * 0 fiyat "İkram" sayılır.
+   */
   function fiyatMetni(u, sz) {
     if (!u.price && !u.priceMax) return sz.ikram;
-    if (u.priceMax && u.priceMax !== u.price) {
-      return paraTL(u.price) + " – " + paraTL(u.priceMax);
-    }
-    return paraTL(u.price);
+    return paraTL(u.price || u.priceMax);
   }
 
   /* ------------------------------------------------------------ sözlükler */
@@ -859,42 +875,42 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     tr: { ara: "Menüde ara", kapat: "Kapat", menu: "MENÜ", porsiyon: "Porsiyon",
           icerir: "İçerir", olabilir: "İçerebilir", alerjen: "Alerjen", kalori: "Kalori",
           filtre: "Alerjen filtresi", temizle: "Temizle", sonucYok: "Sonuç bulunamadı",
-          ikram: "İkram", tumu: "Tümü", kisi: "kişilik", populer: "Popüler",
+          ikram: "İkram", porsiyonlar: "Farklı porsiyonlar", tumu: "Tümü", kisi: "kişilik", populer: "Popüler",
           sef: "Şefin seçimi", vejetaryen: "Vejetaryen", vegan: "Vegan",
           kdv: "Fiyatlara KDV dahildir", acik: "Açık", kapali: "Kapalı",
           gizle: "seçili alerjenli ürünler gizlendi", dil: "Dil" },
     en: { ara: "Search the menu", kapat: "Close", menu: "MENU", porsiyon: "Portion",
           icerir: "Contains", olabilir: "May contain", alerjen: "Allergen", kalori: "Calories",
           filtre: "Allergen filter", temizle: "Clear", sonucYok: "No results",
-          ikram: "Complimentary", tumu: "All", kisi: "people", populer: "Popular",
+          ikram: "Complimentary", porsiyonlar: "Multiple sizes", tumu: "All", kisi: "people", populer: "Popular",
           sef: "Chef's choice", vejetaryen: "Vegetarian", vegan: "Vegan",
           kdv: "VAT included", acik: "Open", kapali: "Closed",
           gizle: "items with selected allergens are hidden", dil: "Language" },
     de: { ara: "Im Menü suchen", kapat: "Schließen", menu: "MENÜ", porsiyon: "Portion",
           icerir: "Enthält", olabilir: "Kann enthalten", alerjen: "Allergen", kalori: "Kalorien",
           filtre: "Allergenfilter", temizle: "Löschen", sonucYok: "Keine Treffer",
-          ikram: "Gratis", tumu: "Alle", kisi: "Personen", populer: "Beliebt",
+          ikram: "Gratis", porsiyonlar: "Mehrere Größen", tumu: "Alle", kisi: "Personen", populer: "Beliebt",
           sef: "Empfehlung", vejetaryen: "Vegetarisch", vegan: "Vegan",
           kdv: "Inkl. MwSt.", acik: "Geöffnet", kapali: "Geschlossen",
           gizle: "Artikel mit gewählten Allergenen ausgeblendet", dil: "Sprache" },
     es: { ara: "Buscar en el menú", kapat: "Cerrar", menu: "MENÚ", porsiyon: "Ración",
           icerir: "Contiene", olabilir: "Puede contener", alerjen: "Alérgeno", kalori: "Calorías",
           filtre: "Filtro de alérgenos", temizle: "Limpiar", sonucYok: "Sin resultados",
-          ikram: "Cortesía", tumu: "Todo", kisi: "personas", populer: "Popular",
+          ikram: "Cortesía", porsiyonlar: "Varios tamaños", tumu: "Todo", kisi: "personas", populer: "Popular",
           sef: "Sugerencia del chef", vejetaryen: "Vegetariano", vegan: "Vegano",
           kdv: "IVA incluido", acik: "Abierto", kapali: "Cerrado",
           gizle: "platos con alérgenos seleccionados ocultos", dil: "Idioma" },
     fr: { ara: "Rechercher", kapat: "Fermer", menu: "MENU", porsiyon: "Portion",
           icerir: "Contient", olabilir: "Peut contenir", alerjen: "Allergène", kalori: "Calories",
           filtre: "Filtre allergènes", temizle: "Effacer", sonucYok: "Aucun résultat",
-          ikram: "Offert", tumu: "Tout", kisi: "personnes", populer: "Populaire",
+          ikram: "Offert", porsiyonlar: "Plusieurs tailles", tumu: "Tout", kisi: "personnes", populer: "Populaire",
           sef: "Choix du chef", vejetaryen: "Végétarien", vegan: "Végan",
           kdv: "TVA incluse", acik: "Ouvert", kapali: "Fermé",
           gizle: "plats avec allergènes sélectionnés masqués", dil: "Langue" },
     ar: { ara: "ابحث في القائمة", kapat: "إغلاق", menu: "القائمة", porsiyon: "حصة",
           icerir: "يحتوي", olabilir: "قد يحتوي", alerjen: "مسببات الحساسية", kalori: "سعرات",
           filtre: "تصفية المواد المسببة للحساسية", temizle: "مسح", sonucYok: "لا توجد نتائج",
-          ikram: "ضيافة", tumu: "الكل", kisi: "أشخاص", populer: "الأكثر طلباً",
+          ikram: "ضيافة", porsiyonlar: "أحجام متعددة", tumu: "الكل", kisi: "أشخاص", populer: "الأكثر طلباً",
           sef: "اختيار الشيف", vejetaryen: "نباتي", vegan: "نباتي صرف",
           kdv: "الأسعار شاملة الضريبة", acik: "مفتوح", kapali: "مغلق",
           gizle: "تم إخفاء الأصناف المحددة", dil: "اللغة" }
@@ -1139,7 +1155,9 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     var sz = this.sz(), p = [];
     if (u.kcal) p.push(String(u.kcal));
     if (u.grams) p.push(String(u.grams));
-    if (u.portions && u.portions.length > 1) p.push(u.portions.length + " " + sz.porsiyon.toLocaleLowerCase("tr"));
+    /* Sayı vermiyoruz ("4 porsiyon" kartta gereksiz duruyordu); yalnızca
+       birden çok porsiyon olduğunu belirtiyoruz. */
+    if (u.portions && u.portions.length > 1) p.push(sz.porsiyonlar);
     return p;
   };
 
@@ -1299,7 +1317,8 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     if (this.durum.giris) this.kaydirmaKilidi(true);
     else if (!this.durum.acikUrun) this.kaydirmaKilidi(false);
     this.gorselKancasi();
-    this.gorselleriTara();
+    /* Karşılama açıkken menü arkada duruyor; ilk ekranı şimdiden hazırla. */
+    if (this.durum.giris) this.gorselleriOnHazirla(14);
     if (this.durum.acikUrun) this.detayCiz();
   };
 
@@ -1336,7 +1355,6 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     clearTimeout(this.listeZaman);
     this.listeZaman = setTimeout(function () { govde.classList.remove("govde--yeni"); }, 400);
 
-    this.gorselleriTara();
 
     /* Kategori çubuğu da süzgece uyar (boşalan kategoriler düşer). */
     var eskiCubuk = this.kok.querySelector("[data-kategori-cubugu]");
@@ -1465,7 +1483,6 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       void kutu.getBoundingClientRect().height;
       kutu.classList.add("acildi");
     }
-    this.gorselleriTara();
 
     if (kutu && kutu.focus) kutu.focus({ preventScroll: true });
     this.suruklemeyiBagla(kutu, ortu);
@@ -1765,25 +1782,29 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     var kok = this.kok;
     if (!kok || kok.__gorselKancasi) return;
     kok.__gorselKancasi = true;
-    /* Sönümlemeli giriş yalnızca betik çalışıyorken açılır. */
-    document.documentElement.className += " js-hazir";
 
     kok.addEventListener("load", function (e) {
       var el = e.target;
-      if (el && el.tagName === "IMG") el.classList.add("yuklendi");
-    }, true);
-    kok.addEventListener("error", function (e) {
-      /* Yüklenemeyen görsel saydam kalmasın, yerini boş bıraksın. */
-      var el = e.target;
-      if (el && el.tagName === "IMG") el.classList.add("yuklendi");
+      if (!el || el.tagName !== "IMG" || el.__girdi) return;
+      el.__girdi = true;
+      el.classList.add("yeni-yuklendi");
+      setTimeout(function () { el.classList.remove("yeni-yuklendi"); }, 420);
     }, true);
   };
 
-  Motor.prototype.gorselleriTara = function () {
+  /**
+   * Karşılama dururken ilk ekranın görsellerini sessizce hazırlar.
+   * Kullanıcı düğmeye bastığında menü çoktan boyanmış olur; yoksa o anda
+   * onlarca görsel birden inip çözülüyor ve ilk kare takılıyordu.
+   */
+  Motor.prototype.gorselleriOnHazirla = function (adet) {
     if (!this.kok) return;
-    var g = this.kok.querySelectorAll("img");
-    for (var i = 0; i < g.length; i++) {
-      if (g[i].complete) g[i].classList.add("yuklendi");
+    var g = this.kok.querySelectorAll(".urunler img, .kart-gorsel img, .satir-gorsel");
+    var sinir = Math.min(adet || 12, g.length);
+    for (var i = 0; i < sinir; i++) {
+      var im = g[i];
+      if (im.getAttribute("loading") === "lazy") im.setAttribute("loading", "eager");
+      if (im.decode) { try { im.decode().catch(function () {}); } catch (hata) { /* yoksay */ } }
     }
   };
 
@@ -1826,9 +1847,9 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
           if (sayfa) {
             sayfa.removeAttribute("inert");
             sayfa.removeAttribute("aria-hidden");
-            /* Menü sönen karşılamanın altından hafifçe yükselerek gelsin. */
-            sayfa.classList.add("sayfa--acildi");
-            setTimeout(function () { sayfa.classList.remove("sayfa--acildi"); }, 600);
+            /* Menüye BİLEREK animasyon verilmiyor: .sayfa binden fazla öğe
+               taşıyor, hepsini birden canlandırmak telefonda takılma
+               yapıyordu. Karşılamanın kendi sönüşü geçişi zaten anlatıyor. */
           }
           self.kaydirmaKilidi(false);
 
@@ -1936,6 +1957,13 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
   Motor.prototype.baslat = function (kokSecici) {
     this.kok = document.querySelector(kokSecici || "#menu");
     if (!this.kok) return;
+    /*
+     * Sönümlemeli görsel girişi yalnızca betik çalışıyorken açılır; sınıf
+     * İLK ÇİZİMDEN ÖNCE veriliyor. Sonradan eklenince görseller bir de
+     * görünürden saydama doğru geri sönüyor, yani onlarca gereksiz geçiş
+     * başlıyordu.
+     */
+    document.documentElement.className += " js-hazir";
     this.ciz();
     this.olaylariBagla();
   };
