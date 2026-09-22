@@ -94,13 +94,42 @@ button:active, .filtre-oge:active { transform: scale(.975); }
    birlikte, kısa bir yükselişle gelir — liste "zıplamaz". */
 .govde--yeni > * { animation: listeGir .26s cubic-bezier(.2,.7,.3,1) both; }
 @keyframes listeGir { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+
+/*
+ * Ürün kartları belirirken de sönümlenerek gelsin. Kartlar sırayla, çok
+ * küçük gecikmelerle açılır; hepsi aynı anda "patlamaz".
+ */
+.urunler > * { animation: kartGir .34s cubic-bezier(.2,.7,.3,1) both; }
+.urunler > *:nth-child(1) { animation-delay: .02s; }
+.urunler > *:nth-child(2) { animation-delay: .05s; }
+.urunler > *:nth-child(3) { animation-delay: .08s; }
+.urunler > *:nth-child(4) { animation-delay: .11s; }
+.urunler > *:nth-child(5) { animation-delay: .14s; }
+.urunler > *:nth-child(n+6) { animation-delay: .16s; }
+@keyframes kartGir { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/*
+ * Görseller yüklendikleri anda sert biçimde beliriyordu; artık sönümlenerek
+ * girerler.
+ *
+ * Kural BİLEREK `.js-hazir` altında: sınıfı motor çalışırken ekler. Betik
+ * hiç çalışmazsa (çok eski cihaz, hata, kapalı JS) görseller saydam takılı
+ * kalmasın, olduğu gibi görünsün.
+ */
+.js-hazir .kart-gorsel img, .js-hazir .satir-gorsel,
+.js-hazir .kutu-gorsel img, .js-hazir .dt-gorsel img {
+  opacity: 0;
+  transition: opacity .32s ease;
+}
+.js-hazir .kart-gorsel img.yuklendi, .js-hazir .satir-gorsel.yuklendi,
+.js-hazir .kutu-gorsel img.yuklendi, .js-hazir .dt-gorsel img.yuklendi { opacity: 1; }
 .govde { padding-block: 8px 48px; }
 .bos { padding: 56px 0; text-align: center; color: var(--sessiz); }
 
 /* ----------------------------------------------------- karşılama ekranı */
 
 .giris {
-  position: fixed; inset: 0; z-index: 60;
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 60;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden; background: var(--zemin);
   transition: opacity .42s ease, transform .42s ease;
@@ -108,10 +137,10 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 /* Menüye geçerken karşılama yerinde sönerek açılır — anında kaybolmaz. */
 .giris.cikiyor { opacity: 0; transform: scale(1.045); pointer-events: none; }
 .giris-medya {
-  position: absolute; inset: 0;
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
   width: 100%; height: 100%; object-fit: cover;
 }
-.giris-perde { position: absolute; inset: 0; }
+.giris-perde { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
 .giris-ic {
   position: relative; z-index: 2;
   display: flex; flex-direction: column; align-items: center; gap: 28px;
@@ -132,10 +161,10 @@ button:active, .filtre-oge:active { transform: scale(.975); }
   background: var(--vurgu); color: var(--vurgu-metin);
   font-family: var(--yazi-baslik);
   font-size: 13px; font-weight: 700; letter-spacing: .22em;
-  box-shadow: 0 10px 34px hsl(var(--vurgu-h) 60% 20% / .45);
+  box-shadow: 0 10px 34px hsla(var(--vurgu-h), 60%, 20%, .45);
   transition: transform .18s ease, box-shadow .18s ease;
 }
-.giris-dugme:hover { transform: translateY(-2px); box-shadow: 0 14px 40px hsl(var(--vurgu-h) 60% 20% / .55); }
+.giris-dugme:hover { transform: translateY(-2px); box-shadow: 0 14px 40px hsla(var(--vurgu-h), 60%, 20%, .55); }
 @keyframes girisYukari { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
 
 /* ------------------------------------------------------------- rozetler */
@@ -243,20 +272,23 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 
 .dt-ortu {
   --dt-ilerleme: 0;                     /* parmakla ne kadar aşağı çekildi (0–1) */
-  position: fixed; inset: 0; z-index: 70;
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 70;
   display: flex; align-items: flex-end; justify-content: center;
   padding: 0;
-  background: hsl(var(--vurgu-h) 30% 4% / calc(.72 * (1 - var(--dt-ilerleme))));
-  backdrop-filter: blur(calc(6px * (1 - var(--dt-ilerleme))));
+  background: hsla(var(--vurgu-h), 30%, 4%, calc(.72 * (1 - var(--dt-ilerleme))));
+  -webkit-backdrop-filter: blur(calc(6px * (1 - var(--dt-ilerleme)))); backdrop-filter: blur(calc(6px * (1 - var(--dt-ilerleme))));
   animation: ortuGir .2s ease both;
 }
 /* Kapanırken perde de sönsün; kutu aşağı süzülürken arkası açılır. */
-.dt-ortu.kapanir { background: hsl(var(--vurgu-h) 30% 4% / 0); backdrop-filter: blur(0); transition: background .22s ease, backdrop-filter .22s ease; }
+.dt-ortu.kapanir { background: hsla(var(--vurgu-h), 30%, 4%, 0); -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); transition: background .22s ease, backdrop-filter .22s ease; }
 @media (min-width: 560px) { .dt-ortu { align-items: center; padding: 24px; } }
 
 .dt-kutu {
   position: relative;
-  width: 100%; max-width: 480px; max-height: 92dvh; overflow-y: auto;
+  width: 100%; max-width: 480px;
+  /* dvh'yi anlamayan eski taraycilar vh yedegini kullanir. */
+  max-height: 92vh; max-height: 92dvh;
+  overflow-y: auto;
   background: var(--yuzey); color: var(--murekkep);
   border-radius: 22px 22px 0 0;
   box-shadow: var(--golge);
@@ -316,8 +348,8 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 }
 .dt-tutamac span {
   width: 42px; height: 4px; border-radius: 999px;
-  background: hsl(0 0% 100% / .72);
-  box-shadow: 0 1px 4px hsl(var(--vurgu-h) 30% 6% / .5);
+  background: hsla(0, 0%, 100%, .72);
+  box-shadow: 0 1px 4px hsla(var(--vurgu-h), 30%, 6%, .5);
 }
 /* Görseli olmayan üründe kutu doğrudan yüzey rengiyle başlar; orada beyaz
    tutamaç kaybolurdu. */
@@ -335,10 +367,17 @@ button:active, .filtre-oge:active { transform: scale(.975); }
   position: absolute; top: 12px; inset-inline-end: 12px; z-index: 2;
   width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
   border: 0; border-radius: 999px;
-  background: hsl(var(--vurgu-h) 20% 8% / .55); color: #fff;
-  backdrop-filter: blur(8px);
+  background: hsla(var(--vurgu-h), 20%, 8%, .55); color: #fff;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
 }
-.dt-gorsel { aspect-ratio: 4 / 3; background: var(--yuzey-2); }
+/* aspect-ratio'yu anlamayan cihazlarda gorsel alani yukseklik alamiyordu;
+   padding-top yedegi ile 4/3 orani korunur. */
+.dt-gorsel { position: relative; padding-top: 75%; background: var(--yuzey-2); }
+.dt-gorsel img { position: absolute; top: 0; left: 0; }
+@supports (aspect-ratio: 4 / 3) {
+  .dt-gorsel { aspect-ratio: 4 / 3; padding-top: 0; }
+  .dt-gorsel img { position: static; }
+}
 /* Görselsiz kutuda tutamaç ile ilk satır çakışmasın. */
 .dt-kutu--yazi .dt-govde { padding-top: 34px; }
 .dt-gorsel img { width: 100%; height: 100%; object-fit: cover; }
@@ -548,11 +587,21 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
   }
 
+  /*
+   * Renkler BILEREK virgullu yazilir: hsl(h, s%, l%) / hsla(h, s%, l%, a).
+   * Bosluklu yeni sozdizimi (hsl(h s% l% / a)) Safari 12 ve eski Android
+   * WebView'de gecersiz sayiliyor; palet degiskenlerinin tamami cokup menu
+   * renksiz ve okunmaz hale geliyordu. Virgullu bicimi her tarayici anlar.
+   */
+  /** "f" -> "0f" (String.padStart eski cihazlarda yok). */
+  function ikiHane(m) { return m.length < 2 ? "0" + m : m; }
+
   function hsl(h, s, l, a) {
-    var sn = Math.max(0, Math.min(100, s)), ln = Math.max(0, Math.min(100, l));
+    var hn = Math.round(h), sn = Math.max(0, Math.min(100, Math.round(s))),
+        ln = Math.max(0, Math.min(100, Math.round(l)));
     return a == null
-      ? "hsl(" + h + " " + sn + "% " + ln + "%)"
-      : "hsl(" + h + " " + sn + "% " + ln + "% / " + a + ")";
+      ? "hsl(" + hn + ", " + sn + "%, " + ln + "%)"
+      : "hsla(" + hn + ", " + sn + "%, " + ln + "%, " + a + ")";
   }
 
   /** "#e11d48" -> {r,g,b} (0-255). Geçersizse null. */
@@ -686,7 +735,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     if (kurus == null) return "";
     var tam = Math.trunc(kurus / 100), kus = Math.abs(kurus % 100);
     var s = tam.toLocaleString("tr-TR");
-    if (kus) s += "," + String(kus).padStart(2, "0");
+    if (kus) s += "," + (kus < 10 ? "0" + kus : String(kus));
     return s + " ₺";
   }
 
@@ -897,8 +946,8 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
     oneri["cizgi"] = koyu ? hsl(c.h, 10, 20) : hsl(c.h, 18, 88);
     oneri["golge"] = koyu
-      ? "0 10px 30px hsl(" + c.h + " 40% 3% / 0.55)"
-      : "0 8px 24px hsl(" + c.h + " 30% 20% / 0.10)";
+      ? "0 10px 30px hsla(" + Math.round(c.h) + ", 40%, 3%, 0.55)"
+      : "0 8px 24px hsla(" + Math.round(c.h) + ", 30%, 20%, 0.10)";
 
     return { oneri: oneri, c: c, koyu: koyu };
   };
@@ -1086,7 +1135,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     var op = (ortu.opacity == null ? 55 : ortu.opacity) / 100;
     var renk = ortu.color || "#000000";
     var perde = yon
-      ? "linear-gradient(" + yon + ", " + renk + Math.round(op * 255).toString(16).padStart(2, "0") + ", transparent 78%)"
+      ? "linear-gradient(" + yon + ", " + renk + ikiHane(Math.round(op * 255).toString(16)) + ", transparent 78%)"
       : renk;
     var logo = w.logo || this.isletme.logo;
     var boy = Math.min(320, w.logoSize || 220);
@@ -1141,6 +1190,8 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
        düğmeye basınca menü ortasında bir yerde açılıyordu. */
     if (this.durum.giris) this.kaydirmaKilidi(true);
     else if (!this.durum.acikUrun) this.kaydirmaKilidi(false);
+    this.gorselKancasi();
+    this.gorselleriTara();
     if (this.durum.acikUrun) this.detayCiz();
   };
 
@@ -1176,6 +1227,8 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     govde.classList.add("govde--yeni");
     clearTimeout(this.listeZaman);
     this.listeZaman = setTimeout(function () { govde.classList.remove("govde--yeni"); }, 400);
+
+    this.gorselleriTara();
 
     /* Kategori çubuğu da süzgece uyar (boşalan kategoriler düşer). */
     var eskiCubuk = this.kok.querySelector("[data-kategori-cubugu]");
@@ -1249,10 +1302,15 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     if (kilitle) {
       if (this.kilitliY != null) return;
       this.kilitliY = window.scrollY || window.pageYOffset || 0;
+      /* Kilitlenince dikey kaydırma çubuğu kaybolur ve sayfa onun genişliği
+         kadar yana zıplar — kutu açılışında menü "yenileniyormuş" gibi
+         görünüyordu. Kaybolan genişlik kadar boşluk bırakıyoruz. */
+      var telafi = window.innerWidth - document.documentElement.clientWidth;
       g.style.position = "fixed";
       g.style.top = -this.kilitliY + "px";
       g.style.insetInline = "0";
       g.style.width = "100%";
+      if (telafi > 0) g.style.paddingInlineEnd = telafi + "px";
     } else {
       if (this.kilitliY == null) return;
       var y = this.kilitliY;
@@ -1261,6 +1319,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       g.style.top = "";
       g.style.insetInline = "";
       g.style.width = "";
+      g.style.paddingInlineEnd = "";
       var eskiDavranis = document.documentElement.style.scrollBehavior;
       document.documentElement.style.scrollBehavior = "auto";
       window.scrollTo(0, y);
@@ -1297,6 +1356,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       void kutu.getBoundingClientRect().height;
       kutu.classList.add("acildi");
     }
+    this.gorselleriTara();
 
     if (kutu && kutu.focus) kutu.focus({ preventScroll: true });
     this.suruklemeyiBagla(kutu, ortu);
@@ -1369,14 +1429,6 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
       tutamactan = !!e.target.closest("[data-tutamac]");
 
-      /*
-       * Fareyle kutunun GÖVDESİNDEN sürüklemek, metin seçmekle aynı hareket:
-       * ikisi birden olunca yazılar maviye boyanıyor ve jest tutmuyordu.
-       * Fare için sürükleme yalnızca tutamaçtan başlar (masaüstünde zaten
-       * çarpı ve dışına tıklama var); parmak ve kalem gövdeden de çeker.
-       */
-      if (e.pointerType === "mouse" && !tutamactan) return;
-
       /* İçerik aşağı kaydırılmışsa gövdeden çekmek kapatma değil okumadır. */
       if (!tutamactan && kutu.scrollTop > 0) return;
 
@@ -1396,8 +1448,12 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
         if (fark <= 0 || Math.abs(e.clientX - basX) > Math.abs(fark)) { aktif = false; return; }
         karar = true;
         /* Sürüklerken kutunun kendi kaydırması ve metin seçimi kapanır;
-           ikisi aynı anda çalışınca hareket takılıyordu. */
+           ikisi aynı anda çalışınca hareket takılıyordu. Fareyle sürüklerken
+           o ana kadar seçilmiş olan metin de bırakılır, yoksa yazılar mavi
+           kalıyordu. */
         kutu.classList.add("suruklenir");
+        var secim = window.getSelection && window.getSelection();
+        if (secim && secim.removeAllRanges) secim.removeAllRanges();
         if (kutu.setPointerCapture) {
           try { kutu.setPointerCapture(e.pointerId); } catch (hata) { /* yoksay */ }
         }
@@ -1432,8 +1488,8 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
       /* Eşik ekrana göre: küçük telefonda 90, büyük kutuda 150 piksel.
          Bırakmadan önce duraklandıysa (hız düşük) yalnızca mesafe sayılır. */
-      var mesafeEsigi = Math.max(90, Math.min(150, kutu.clientHeight * 0.25));
-      if (dy > mesafeEsigi || hiz > 0.75) {
+      var mesafeEsigi = Math.max(64, Math.min(110, kutu.clientHeight * 0.16));
+      if (dy > mesafeEsigi || hiz > 0.45) {
         self.detayKapat(true);
       } else {
         kutu.style.transform = "";
@@ -1483,6 +1539,40 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
   /* #govde odaklanabilir değil; tabindex verilmeden focus() sessizce düşüyor
      ve klavye kullanıcısı sayfanın başına dönemiyordu. */
+  /**
+   * Görseller yüklenince sönümlenerek girsin. Tek tek dinleyici bağlamak
+   * yerine yakalama evresinde tek bir `load` dinleyicisi kullanılır —
+   * lazy yüklenen yüzlerce görsel için de tek kanca yeter.
+   *
+   * Önbellekten gelen görseller olay üretmeden hazır olabildiği için
+   * çizimden sonra bir de tamamlananlar taranır.
+   */
+  Motor.prototype.gorselKancasi = function () {
+    var kok = this.kok;
+    if (!kok || kok.__gorselKancasi) return;
+    kok.__gorselKancasi = true;
+    /* Sönümlemeli giriş yalnızca betik çalışıyorken açılır. */
+    document.documentElement.className += " js-hazir";
+
+    kok.addEventListener("load", function (e) {
+      var el = e.target;
+      if (el && el.tagName === "IMG") el.classList.add("yuklendi");
+    }, true);
+    kok.addEventListener("error", function (e) {
+      /* Yüklenemeyen görsel saydam kalmasın, yerini boş bıraksın. */
+      var el = e.target;
+      if (el && el.tagName === "IMG") el.classList.add("yuklendi");
+    }, true);
+  };
+
+  Motor.prototype.gorselleriTara = function () {
+    if (!this.kok) return;
+    var g = this.kok.querySelectorAll("img");
+    for (var i = 0; i < g.length; i++) {
+      if (g[i].complete) g[i].classList.add("yuklendi");
+    }
+  };
+
   Motor.prototype.govdeyeOdaklan = function () {
     var g = document.getElementById("govde");
     if (!g) return;
@@ -1742,7 +1832,17 @@ if (VERI) { window.MENU = new window.MenuMotor(VERI, window.DERI); window.MENU.b
   }
   .dnm::-webkit-scrollbar { width: 6px; }
   .dnm::-webkit-scrollbar-thumb { background: #3a3745; border-radius: 999px; }
-  .dnm[hidden] { display: none; }
+  /* Panel de ışınlanmasın: açılırken kenardan kayarak gelir. */
+  .dnm {
+    transition: opacity .24s ease, transform .28s cubic-bezier(.2,.8,.3,1), visibility .28s;
+  }
+  .dnm[hidden] {
+    display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    transform: translateY(-50%) translateX(14px) scale(.98);
+  }
+  .dnm-centik { transition: background .2s ease, transform .16s ease; }
+  .dnm-centik:active { transform: translateY(-50%) scale(.95); }
 
   .dnm-baslik { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .dnm-baslik strong { font-size: 13.5px; }
@@ -1822,6 +1922,7 @@ if (VERI) { window.MENU = new window.MenuMotor(VERI, window.DERI); window.MENU.b
 
   @media (max-width: 560px) {
     .dnm { left: 10px; right: 10px; width: auto; top: auto; bottom: 10px; transform: none; max-height: 76vh; }
+    .dnm[hidden] { transform: translateY(16px) scale(.98); }
     .dnm-centik { height: 72px; }
   }
 </style>
