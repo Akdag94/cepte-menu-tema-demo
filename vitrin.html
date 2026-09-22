@@ -355,6 +355,15 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 }
 /* Sürüklerken iç kaydırma da durur; ikisi aynı anda takılma yapıyordu. */
 .dt-kutu.suruklenir .dt-kaydir { overflow-y: hidden; touch-action: none; }
+/*
+ * Sürüklerken kutunun İÇİNDEKİ pahalı işler kapanır. Kapatma düğmesinin
+ * bulanıklığı kutuyla birlikte hareket ettiği için her karede yeniden
+ * hesaplanıyordu; görünümü neredeyse aynı kalacak biçimde donduruluyor.
+ */
+.dt-kutu.suruklenir .dt-kapat {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  background: hsla(var(--vurgu-h), 20%, 8%, .82);
+}
 .dt-kaydir { scrollbar-gutter: stable; }
 .dt-kutu:focus { outline: none; }
 /* Geniş ekranda kutu ortada durur; oradan tam boy aşağı kaymak yerine
@@ -1533,6 +1542,16 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     /* iOS'ta esnek kaydırmadan sonra scrollTop tam 0'a oturmayabiliyor. */
     var UST_PAYI = 2;
 
+    /*
+     * Yazım doğrudan yapılır, requestAnimationFrame'e sarılmaz: tarayıcı
+     * pointermove'ları zaten kare hızında birleştiriyor, rAF ise sekme
+     * arka plana alındığında duruyor ve jest yarıda kalıyordu.
+     */
+    function kareyeYaz() {
+      kutu.style.transform = "translateY(" + dy + "px)";
+      if (perde) perde.style.opacity = String(1 - Math.min(1, dy / 320));
+    }
+
     function ustteMi() { return kaydir.scrollTop <= UST_PAYI; }
 
     function ustSinifi() {
@@ -1608,8 +1627,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
       dy = Math.max(0, fark);
       if (e.cancelable) e.preventDefault();
-      kutu.style.transform = "translateY(" + dy + "px)";
-      if (perde) perde.style.opacity = String(1 - Math.min(1, dy / 320));
+      kareyeYaz();
     }, { passive: false });
 
     var birak = function (e) {
