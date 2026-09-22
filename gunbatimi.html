@@ -286,8 +286,13 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 .dt-kutu {
   position: relative;
   width: 100%; max-width: 480px;
-  /* dvh'yi anlamayan eski taraycilar vh yedegini kullanir. */
-  max-height: 92vh; max-height: 92dvh;
+  /*
+   * Yukseklik ORTUNUN yuksekligine gore sinirlanir, vh/dvh'ye gore degil:
+   * iOS'ta 100vh gorunur alandan buyuk oldugu icin kutunun ustu -- tutamac
+   * ve kapatma dugmesi -- ekran disina tasiyor, kutu kapatilamaz hale
+   * geliyordu. Ustte her zaman 64 piksel bos kalir; oraya dokunmak da kapatir.
+   */
+  max-height: calc(100% - 64px);
   /* Kaydırma .dt-kaydir'da; kutu sabit kalır ki tutamaç ve kapatma
      düğmesi içerikle birlikte kayıp gitmesin. */
   overflow: hidden;
@@ -355,7 +360,7 @@ button:active, .filtre-oge:active { transform: scale(.975); }
   /* Sadece ortadaki şerit kadar yer kaplar: tüm genişliği kaplasaydı
      kapatma düğmesinin üstüne binip tıklamayı yutardı. */
   position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 3;
-  width: 160px; height: 42px;
+  width: 150px; height: 44px;
   display: flex; align-items: center; justify-content: center;
   cursor: grab; touch-action: none;
 }
@@ -377,12 +382,16 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 .dt-tutamac:active { cursor: grabbing; }
 
 .dt-kapat {
-  position: absolute; top: 12px; inset-inline-end: 12px; z-index: 2;
-  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  /* 44x44: parmakla rahat vurulan en kucuk hedef. */
+  position: absolute; top: 10px; right: 10px; z-index: 4;
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
   border: 0; border-radius: 999px;
-  background: hsla(var(--vurgu-h), 20%, 8%, .55); color: #fff;
+  background: hsla(var(--vurgu-h), 20%, 8%, .72); color: #fff;
   -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px hsla(var(--vurgu-h), 30%, 6%, .35);
 }
+[dir="rtl"] .dt-kapat { right: auto; left: 10px; }
+.dt-kapat:active { transform: scale(.92); }
 /* aspect-ratio'yu anlamayan cihazlarda gorsel alani yukseklik alamiyordu;
    padding-top yedegi ile 4/3 orani korunur. */
 .dt-gorsel { position: relative; padding-top: 75%; background: var(--yuzey-2); }
@@ -1436,15 +1445,36 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
     if (kutu && kutu.focus) kutu.focus({ preventScroll: true });
     this.suruklemeyiBagla(kutu, ortu);
+
+    /*
+     * Telefonda bir katmani kapatmanin en dogal yolu geri tusu/jesti.
+     * Gecmise bir giris eklenir; geri basilinca kutu kapanir, menuden
+     * cikilmaz.
+     */
+    if (window.history && history.pushState && !this.gecmisEkledi) {
+      try {
+        history.pushState({ cmDetay: 1 }, "");
+        this.gecmisEkledi = true;
+      } catch (hata) { /* yoksay */ }
+    }
   };
 
   /**
    * Kutuyu kapatır. `kaydirarak` true ise kutu parmağın bıraktığı yerden
    * aşağı süzülür; değilse normal kapanış animasyonu oynar.
    */
-  Motor.prototype.detayKapat = function (kaydirarak) {
+  Motor.prototype.detayKapat = function (kaydirarak, gecmistenGeldi) {
     var self = this, ortu = this.ortu;
     this.durum.acikUrun = null;
+
+    /* Kutu dugmeyle/jestle kapandiysa gecmisteki girisi de geri al ki
+       geri tusu kullaniciyi bir onceki sayfaya atmasin. */
+    if (this.gecmisEkledi && !gecmistenGeldi) {
+      this.gecmisEkledi = false;
+      try { history.back(); } catch (hata) { /* yoksay */ }
+    }
+    this.gecmisEkledi = false;
+
     if (!ortu) return;
     this.ortu = null;
 
@@ -1797,6 +1827,11 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && self.durum.acikUrun) { self.detayKapat(false); }
+    });
+
+    /* Geri tusu/jesti: acik kutu varsa once onu kapatir. */
+    window.addEventListener("popstate", function () {
+      if (self.durum.acikUrun) self.detayKapat(false, true);
     });
   };
 
