@@ -271,16 +271,28 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 /* ------------------------------------------------------- ürün detayı */
 
 .dt-ortu {
-  --dt-ilerleme: 0;                     /* parmakla ne kadar aşağı çekildi (0–1) */
   position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 70;
   display: flex; align-items: flex-end; justify-content: center;
   padding: 0;
-  background: hsla(var(--vurgu-h), 30%, 4%, calc(.72 * (1 - var(--dt-ilerleme))));
-  -webkit-backdrop-filter: blur(calc(6px * (1 - var(--dt-ilerleme)))); backdrop-filter: blur(calc(6px * (1 - var(--dt-ilerleme))));
   animation: ortuGir .2s ease both;
 }
+/*
+ * Perde KENDİ katmanında. Sürüklerken yalnızca opacity'si değişir; opacity
+ * compositor'da işlenir, stil hesabı da boyama da gerektirmez.
+ *
+ * Eskiden ilerleme örtüye CSS değişkeni olarak yazılıyor ve hem arka planın
+ * bulanıklığını hem zeminini besliyordu: parmak her kıpırdadığında bütün
+ * arka plan yeniden bulanıklaşıyor, kutunun tüm içeriği için stil yeniden
+ * hesaplanıyordu. Telefonda hareket bu yüzden takılıyordu.
+ */
+.dt-perde {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background: hsla(var(--vurgu-h), 30%, 4%, .72);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  will-change: opacity;
+}
 /* Kapanırken perde de sönsün; kutu aşağı süzülürken arkası açılır. */
-.dt-ortu.kapanir { background: hsla(var(--vurgu-h), 30%, 4%, 0); -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); transition: background .22s ease, backdrop-filter .22s ease; }
+.dt-ortu.kapanir .dt-perde { opacity: 0; transition: opacity .22s ease; }
 @media (min-width: 560px) { .dt-ortu { align-items: center; padding: 24px; } }
 
 .dt-kutu {
@@ -1420,11 +1432,12 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     var ortu = document.createElement("div");
     ortu.className = "dt-ortu";
     ortu.setAttribute("data-kapat-ortu", "");
-    ortu.innerHTML = this.detayHtml(u);
+    ortu.innerHTML = '<div class="dt-perde"></div>' + this.detayHtml(u);
     this.kok.appendChild(ortu);
     this.ortu = ortu;
 
     var kutu = ortu.querySelector(".dt-kutu");
+    this.perde = ortu.querySelector(".dt-perde");
     this.kaydirmaKilidi(true);
 
     /* Arka plan klavyeye ve ekran okuyucuya kapansın. */
@@ -1518,6 +1531,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     var self = this;
     /* Kaydırma kutunun kendisinde değil iç katmanda. */
     var kaydir = kutu.querySelector(".dt-kaydir") || kutu;
+    var perde = ortu.querySelector(".dt-perde");
     var basY = 0, basX = 0, basScroll = 0, dy = 0;
     var aktif = false, karar = false, yon = "", tutamactan = false;
     var sonY = 0, sonZaman = 0, hiz = 0;
@@ -1604,7 +1618,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       dy = Math.max(0, fark);
       if (e.cancelable) e.preventDefault();
       kutu.style.transform = "translateY(" + dy + "px)";
-      ortu.style.setProperty("--dt-ilerleme", String(Math.min(1, dy / 320)));
+      if (perde) perde.style.opacity = String(1 - Math.min(1, dy / 320));
     }, { passive: false });
 
     var birak = function (e) {
@@ -1626,17 +1640,26 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
         self.detayKapat(true);
       } else {
         kutu.style.transform = "";
-        ortu.style.removeProperty("--dt-ilerleme");
+        if (perde) perde.style.opacity = "";
       }
       dy = 0; hiz = 0;
     };
+
+    /*
+     * iOS Safari pointermove'daki preventDefault'u kaydirma icin dikkate
+     * almiyor; sayfa yine kayiyor ve jest yarida kaliyor. Dokunmatikte asil
+     * frene touchmove'dan basiyoruz.
+     */
+    kutu.addEventListener("touchmove", function (e) {
+      if (aktif && karar && e.cancelable) e.preventDefault();
+    }, { passive: false });
 
     kutu.addEventListener("pointerup", birak);
     kutu.addEventListener("pointercancel", function () {
       /* Jest tarayıcıya kaptırıldıysa kutu yerine dönsün, yarı yolda kalmasın. */
       if (aktif && karar && yon === "asagi") {
         kutu.style.transform = "";
-        ortu.style.removeProperty("--dt-ilerleme");
+        if (perde) perde.style.opacity = "";
       }
       aktif = false; karar = false; yon = ""; dy = 0; hiz = 0;
       kutu.classList.remove("suruklenir");
