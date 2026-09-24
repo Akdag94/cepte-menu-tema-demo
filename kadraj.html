@@ -8,7 +8,7 @@
 <title>Örnek Et — Menü</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap">
 <style>
 /*__FONTS__*/
 /*
@@ -605,108 +605,151 @@ a.bl-satir:active, .bl-satir--dil:active { opacity: .6; }
   .imza a:hover { color: var(--vurgu-yazi); border-bottom-color: var(--vurgu-yazi); }
 }
 
-/* ZARİF — bol boşluk, serif başlık, noktalı fiyat hattı. */
+/* KADRAJ — tipografi, ölçü, düzen. Renkler ortak değişkenlerden gelir. */
 
 :root {
-  --yazi-baslik: "Cormorant Garamond", Georgia, "Times New Roman", serif;
-  --yazi-govde: Jost, "Segoe UI", system-ui, sans-serif;
+  --yazi-baslik: Archivo, "Segoe UI", system-ui, sans-serif;
+  --yazi-govde: Archivo, "Segoe UI", system-ui, sans-serif;
 }
-
-body { font-size: 14.5px; font-weight: 300; }
-.sayfa { max-width: 640px; }
 
 /* ------------------------------------------------------------- başlık */
 
-.ust { padding-top: 18px; }
-.ust-satir { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.ust-saat { font-size: 11.5px; letter-spacing: .2em; color: var(--sessiz); }
-.ust-satir .dil select { border-color: var(--cizgi); background: transparent; letter-spacing: .08em; }
-.ust-satir .dil select option { background: var(--yuzey); color: var(--murekkep); letter-spacing: normal; }
-.ust-satir .bilgi-dugme { background: transparent; letter-spacing: .08em; }
+.ust { position: relative; margin-inline: -16px; }
+.ust-kapak { position: relative; height: 240px; overflow: hidden; }
+.ust-kapak--bos { height: 132px; background: var(--vurgu-sis); }
+.ust-kapak img { width: 100%; height: 100%; object-fit: cover; }
+.ust-perde {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background: linear-gradient(180deg,
+    hsla(var(--vurgu-h), 28%, 6%, .58) 0%,
+    hsla(var(--vurgu-h), 28%, 6%, .12) 42%,
+    hsla(var(--vurgu-h), 28%, 6%, .86) 100%);
+}
+.ust-ic {
+  position: absolute; inset: 0 0 auto; height: 240px;
+  padding: 18px 16px 20px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.ust-kapak--bos + .ust-ic { height: 132px; }
+.ust-kapak--bos + .ust-ic .ust-ad,
+.ust-kapak--bos + .ust-ic .ust-yer { color: var(--murekkep); text-shadow: none; }
 
-.ust-kimlik { padding-block: 30px 26px; text-align: center; }
-.ust-cizgi { display: block; width: 34px; height: 1px; margin: 0 auto 18px; background: var(--vurgu); }
-.ust-logo { max-height: 84px; width: auto; margin: 0 auto; }
+.ust-satir { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.ust-durum {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 11px; border-radius: 999px;
+  background: hsla(0, 0%, 100%, .16); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .05em;
+}
+.ust-nokta { width: 7px; height: 7px; border-radius: 999px; background: hsl(145, 62%, 52%); }
+.ust-durum.kapali .ust-nokta { background: hsl(8, 72%, 58%); }
+/* Kapak fotoğrafının üstünde duruyor: kendi koyu camı ve beyaz yazısıyla
+   her kapakta okunur kalsın. Açılan liste yüzey renginde çizilir. */
+.ust-satir .dil select {
+  background: hsla(0, 0%, 0%, .42); border-color: hsla(0, 0%, 100%, .38); color: #fff;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.ust-satir .dil select option { background: var(--yuzey); color: var(--murekkep); }
+.ust-satir .dil::after { color: hsla(0, 0%, 100%, .85); }
+/* Bilgi düğmesi de kapağın üstünde: dil seçiciyle aynı koyu cam. */
+.ust-satir .bilgi-dugme {
+  background: hsla(0, 0%, 0%, .42); border-color: hsla(0, 0%, 100%, .38); color: #fff;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.ust-satir .bilgi-dugme svg { color: #fff; }
+.ust-kapak--bos + .ust-ic .bilgi-dugme { background: var(--yuzey); border-color: var(--cizgi); color: var(--murekkep); }
+.ust-kapak--bos + .ust-ic .bilgi-dugme svg { color: var(--vurgu-yazi); }
+/* Kimlik kapağın altına yaslı; dokunma alanı yalnızca yazı kadar olsun. */
+.ust-kimlik[data-bilgi-ac] { align-self: flex-start; }
+
+.ust-kimlik { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.ust-logo { max-height: 58px; width: auto; margin-bottom: 2px; }
 .ust-ad {
   margin: 0; font-family: var(--yazi-baslik);
-  font-size: clamp(32px, 9vw, 46px); font-weight: 500;
-  letter-spacing: .15em; line-height: 1; text-wrap: balance;
+  font-size: clamp(30px, 8.5vw, 40px); font-weight: 800;
+  letter-spacing: -.022em; line-height: 1;
+  color: #fff; text-shadow: 0 2px 18px hsla(0, 0%, 0%, .4); text-wrap: balance;
 }
-.ust-yer { margin: 14px 0 0; font-size: 11px; letter-spacing: .3em; color: var(--sessiz); }
+.ust-yer { margin: 0; font-size: 11.5px; font-weight: 600; letter-spacing: .14em; color: hsla(0, 0%, 100%, .76); }
 
 .yapiskan { border-bottom: 1px solid var(--cizgi); }
-.arama-cubugu { display: flex; gap: 10px; align-items: center; padding-block: 12px 2px; }
-#searchInput { border-radius: 0; border-width: 0 0 1px; background: transparent; padding-inline: 2px; font-size: 15px; }
-.filtre-dugme { border-radius: 0; background: transparent; }
+.arama-cubugu {
+  display: flex; gap: 10px; align-items: center;
+  padding-block: 12px 0;
+}
 
 /* --------------------------------------------------------- kategoriler */
 
-/*
- * Kategori çubuğu eskiden 10 piksellik yazıyla, 6 piksellik dolguyla
- * duruyordu: telefonda hem okunmuyor hem parmakla isabet ettirilemiyordu.
- * Harf aralığı açık büyük harf zarif görünümü koruyor; boyut ve dokunma
- * alanı diğer temalarla aynı düzeyde. Etkin kategori ince bir altçizgiyle
- * işaretlenir — yalnız renk farkı koyu zeminde seçilmiyordu.
- */
 .katlar {
-  display: flex; gap: 26px; justify-content: flex-start;
-  margin-inline: -16px; padding: 4px 16px 0;
+  display: flex; gap: 8px;
+  margin-inline: -16px; padding: 12px 16px;
   overflow-x: auto; scrollbar-width: none;
 }
 .katlar::-webkit-scrollbar { display: none; }
 .kat {
-  flex: 0 0 auto; min-height: 46px; padding: 12px 0 11px;
-  border: 0; border-bottom: 1.5px solid transparent;
-  background: none; color: var(--sessiz);
-  font-size: 12.5px; font-weight: 500; letter-spacing: .16em;
-  text-transform: uppercase; white-space: nowrap;
-  transition: color .2s ease, border-color .2s ease;
+  flex: 0 0 auto; padding: 9px 15px; min-height: 40px;
+  border: 1px solid var(--cizgi); border-radius: 999px;
+  background: var(--yuzey-2); color: var(--sessiz);
+  font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
-.kat.etkin { color: var(--vurgu-yazi); border-bottom-color: var(--vurgu); }
+.kat.etkin { background: var(--vurgu); border-color: var(--vurgu); color: var(--vurgu-metin); }
 
 /* -------------------------------------------------------------- bölüm */
 
-.bolum { padding-top: 46px; }
-.bolum-ust { text-align: center; margin-bottom: 26px; }
+.bolum { padding-top: 26px; }
+.bolum-ust { margin-bottom: 14px; }
 .bolum-ust h2 {
-  margin: 0; font-family: var(--yazi-baslik); font-style: italic;
-  font-size: 30px; font-weight: 500; letter-spacing: .03em; color: var(--vurgu-yazi);
+  margin: 0; font-family: var(--yazi-baslik);
+  font-size: 23px; font-weight: 800; letter-spacing: -.02em; text-wrap: balance;
 }
-.bolum-not { margin: 8px 0 0; font-size: 13px; color: var(--sessiz); }
+.bolum-not { margin: 4px 0 0; font-size: 13px; color: var(--sessiz); }
 .alt-baslik {
-  margin: 30px 0 14px; text-align: center;
-  font-size: 11px; font-weight: 500; letter-spacing: .26em;
-  text-transform: uppercase; color: var(--sessiz);
+  margin: 20px 0 10px;
+  font-size: 11px; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--vurgu-yazi);
 }
 
-/* --------------------------------------------------------------- öğe */
+/* -------------------------------------------------------------- kart */
 
-.urunler { display: flex; flex-direction: column; gap: 26px; }
-.oge {
-  display: flex; align-items: flex-start; gap: 16px;
-  width: 100%; padding: 0; border: 0; background: none; color: inherit; text-align: start;
-}
-.oge-gorsel {
-  width: 72px; height: 72px; flex: 0 0 auto;
-  object-fit: cover; border: 1px solid var(--cizgi); padding: 4px;
-  filter: saturate(.9) contrast(1.03);
-}
-.oge-ic { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.oge-ust { display: flex; align-items: baseline; gap: 10px; }
-.oge-ad {
-  font-family: var(--yazi-baslik); font-size: 21px; font-weight: 500;
-  line-height: 1.15; letter-spacing: .01em;
-}
-.oge-nokta { flex: 1 1 auto; height: 1px; margin-bottom: 4px; border-bottom: 1px dotted var(--cizgi); }
-.oge-fiyat {
-  flex: 0 0 auto; font-size: 14px; font-weight: 400;
-  letter-spacing: .04em; color: var(--vurgu-yazi); font-variant-numeric: tabular-nums; white-space: nowrap;
-}
-.oge-aciklama { font-size: 13px; line-height: 1.55; color: var(--sessiz); }
-.oge-not { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--vurgu-acik); }
+.urunler { display: grid; gap: 14px; }
+@media (min-width: 620px) { .urunler { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-/* Detay kutusunda da serif başlık. */
-.dt-ust h3 { font-size: 26px; font-weight: 500; letter-spacing: .02em; }
+.kart {
+  display: flex; flex-direction: column;
+  width: 100%; padding: 0; overflow: hidden;
+  border: 1px solid var(--cizgi); border-radius: 18px;
+  background: var(--yuzey); color: inherit; text-align: start;
+  box-shadow: var(--golge);
+}
+.kart--yazi { border-radius: 14px; box-shadow: none; }
+
+/* overflow: hidden ŞART. Onsuz aspect-ratio yalnızca bir alt sınırdı: kare
+   fotoğraf yüklenince kutuyu kendi boyuna esnetiyordu. Her görsel
+   yüklendiğinde kart ~150 piksel uzuyor, sayfa kaydırılırken aşağı
+   büyüyor, kategoriye gitme hedefi kaçırıyordu. */
+.kart-gorsel { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--yuzey-2); }
+.kart-gorsel img { width: 100%; height: 100%; object-fit: cover; }
+.kart-rozet { position: absolute; top: 10px; inset-inline-start: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.kart-rozet--yazi { padding: 12px 14px 0; }
+
+.kart-govde { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 6px; }
+.kart-ust { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.kart-ad { font-size: 16px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
+.kart-fiyat {
+  flex: 0 0 auto; font-size: 16px; font-weight: 700; color: var(--vurgu-yazi);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.kart-aciklama {
+  margin: 0; font-size: 13px; line-height: 1.45; color: var(--sessiz);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.olculer { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.olcu {
+  padding: 4px 8px; border-radius: 7px;
+  background: var(--yuzey-2); color: var(--sessiz);
+  font-size: 10.5px; font-weight: 600; white-space: nowrap;
+}
 
 </style>
 </head>
@@ -2246,25 +2289,33 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
   };
 })();
 
-/* ZARİF — lüks. Koyu zemin, serif başlıklar, sessiz fiyatlar, bol boşluk. */
+/* KADRAJ — fotoğraf ağırlıklı. Büyük görselli kartlar, sıcak kağıt zemin. */
 window.DERI = {
-  ad: "zarif",
-  varsayilanMod: "koyu",
-  varsayilanVurgu: "#c9a227",
+  ad: "kadraj",
+  varsayilanMod: "acik",
+  varsayilanVurgu: "#b3341a",
 
   ustBaslik: function (c) {
-    var k = c.kacir, i = c.isletme;
-    var yer = [i.district, i.city].filter(Boolean).join(" · ");
+    var k = c.kacir, i = c.isletme, sz = c.sz;
+    var kapak = i.cover || "";
+    var yer = [i.district, i.city].filter(Boolean).join(", ");
+    var durum = i.isOpen === false ? sz.kapali : sz.acik;
+
     return '<header class="ust">' +
-      '<div class="ust-satir">' +
-        '<span class="ust-saat">' + k(i.hours || "") + '</span>' +
-        '<div class="ust-araclar">' + c.bilgiDugmesi() + c.dilHtml() + '</div>' +
-      '</div>' +
-      '<div class="ust-kimlik" data-bilgi-ac>' +
-        '<span class="ust-cizgi"></span>' +
-        (i.logo ? '<img class="ust-logo" src="' + k(i.logo) + '" alt="' + k(i.name || "") + '" loading="eager">'
-                : '<h1 class="ust-ad">' + k((i.name || "").toLocaleUpperCase("tr")) + '</h1>') +
-        (yer ? '<p class="ust-yer">' + k(yer.toLocaleUpperCase("tr")) + '</p>' : "") +
+      (kapak ? '<div class="ust-kapak"><img src="' + k(kapak) + '" alt="" loading="eager"><div class="ust-perde"></div></div>' : '<div class="ust-kapak ust-kapak--bos"></div>') +
+      '<div class="ust-ic">' +
+        '<div class="ust-satir">' +
+          '<span class="ust-durum' + (i.isOpen === false ? " kapali" : "") + '">' +
+            '<span class="ust-nokta"></span>' + k(durum) + (i.hours ? " · " + k(i.hours) : "") +
+          '</span>' +
+          '<div class="ust-araclar">' + c.bilgiDugmesi() + c.dilHtml() + '</div>' +
+        '</div>' +
+        /* Ada/logoya dokunmak da bilgi kartını açar (premium menüdeki gibi). */
+        '<div class="ust-kimlik" data-bilgi-ac>' +
+          (i.logo ? '<img class="ust-logo" src="' + k(i.logo) + '" alt="' + k(i.name || "") + '" loading="eager">' : "") +
+          '<h1 class="ust-ad">' + k(i.name || "") + '</h1>' +
+          (yer ? '<p class="ust-yer">' + k(yer.toLocaleUpperCase("tr")) + '</p>' : "") +
+        '</div>' +
       '</div>' +
     '</header>';
   },
@@ -2283,7 +2334,7 @@ window.DERI = {
     var k = c.kacir, t = c.metin(kat);
     return '<section class="bolum" data-bolum="' + k(kat.id) + '">' +
       '<div class="bolum-ust">' +
-        '<h2>' + k(t.ad.toLocaleLowerCase("tr").replace(/(^|\s)\S/g, function (s) { return s.toLocaleUpperCase("tr"); })) + '</h2>' +
+        '<h2>' + k(t.ad) + '</h2>' +
         (t.desc ? '<p class="bolum-not">' + k(t.desc) + '</p>' : "") +
       '</div>' + ic + '</section>';
   },
@@ -2294,21 +2345,25 @@ window.DERI = {
 
   urun: function (u, c) {
     var k = c.kacir, t = c.metin(u);
-    var rozet = c.rozetler(u).map(function (r) { return k(r.ad); }).join(" · ");
-    var olcu = c.olculer(u).join(" · ");
-    var not = [rozet, olcu].filter(Boolean).join(" · ");
+    var rozet = c.rozetler(u).map(function (r) {
+      return '<span class="rozet rozet--' + r.tur + '">' + k(r.ad) + '</span>';
+    }).join("");
+    var olcu = c.olculer(u).map(function (o) { return '<span class="olcu">' + k(o) + '</span>'; }).join("");
+    var buyuk = !!u.image;
 
-    return '<button type="button" class="oge" data-product="' + k(u.id) + '">' +
-      (u.image ? '<img class="oge-gorsel" src="' + k(u.image) + '" alt="" loading="lazy">' : "") +
-      '<span class="oge-ic">' +
-        '<span class="oge-ust">' +
-          '<span class="oge-ad">' + k(t.ad) + '</span>' +
-          '<span class="oge-nokta"></span>' +
-          '<span class="oge-fiyat">' + k(c.fiyat(u)) + '</span>' +
-        '</span>' +
-        (t.desc ? '<span class="oge-aciklama">' + k(t.desc) + '</span>' : "") +
-        (not ? '<span class="oge-not">' + k(not) + '</span>' : "") +
-      '</span>' +
+    return '<button type="button" class="kart' + (buyuk ? "" : " kart--yazi") + '" data-product="' + k(u.id) + '">' +
+      (buyuk
+        ? '<div class="kart-gorsel"><img src="' + k(u.image) + '" alt="' + k(t.ad) + '" loading="lazy">' +
+          (rozet ? '<div class="kart-rozet">' + rozet + '</div>' : "") + '</div>'
+        : (rozet ? '<div class="rozetler kart-rozet--yazi">' + rozet + '</div>' : "")) +
+      '<div class="kart-govde">' +
+        '<div class="kart-ust">' +
+          '<span class="kart-ad">' + k(t.ad) + '</span>' +
+          '<span class="kart-fiyat">' + k(c.fiyat(u)) + '</span>' +
+        '</div>' +
+        (t.desc ? '<p class="kart-aciklama">' + k(t.desc) + '</p>' : "") +
+        (olcu ? '<div class="olculer">' + olcu + '</div>' : "") +
+      '</div>' +
     '</button>';
   },
 
@@ -2317,9 +2372,10 @@ window.DERI = {
     if (i.phone) b.push('<a href="tel:' + k(String(i.phone).replace(/\s/g, "")) + '">' + k(i.phone) + '</a>');
     if (i.maps) b.push('<a href="' + k(i.maps) + '" target="_blank" rel="noopener">Yol tarifi</a>');
     if (i.instagram) b.push('<a href="' + k(i.instagram) + '" target="_blank" rel="noopener">Instagram</a>');
+    if (i.googleReview) b.push('<a href="' + k(i.googleReview) + '" target="_blank" rel="noopener">Değerlendir</a>');
     return '<footer class="altbilgi">' +
-      (b.length ? '<span class="altbilgi-baglar">' + b.join("") + '</span>' : "<span></span>") +
       '<span>' + k(c.sz.kdv) + '</span>' +
+      (b.length ? '<span class="altbilgi-baglar">' + b.join("") + '</span>' : "") +
       c.imza() +
     '</footer>';
   }

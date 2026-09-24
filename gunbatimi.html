@@ -309,6 +309,80 @@ img.gorsel-yok { visibility: hidden; }
   pointer-events: none;
 }
 
+/* ------------------------------------------------ başlıktaki bilgi düğmesi */
+
+.ust-araclar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.bilgi-dugme {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 36px; padding-inline: 11px 14px;
+  border: 1px solid var(--cizgi); border-radius: 999px;
+  background: var(--yuzey); color: var(--murekkep);
+  font-size: 12.5px; font-weight: 600; letter-spacing: .01em; white-space: nowrap;
+}
+.bilgi-dugme svg { color: var(--vurgu-yazi); flex: none; }
+/* İşletme adı ve logosu da kartı açar. */
+[data-bilgi-ac] { cursor: pointer; }
+.ust-kimlik[data-bilgi-ac]:active { opacity: .72; }
+/* Çok dar ekranda (320 px) yazı düşer, ikon kalır. */
+@media (max-width: 350px) {
+  .bilgi-dugme { width: 36px; padding: 0; justify-content: center; }
+  .bilgi-dugme span { display: none; }
+}
+
+/* ------------------------------------------------- restoran bilgi kartı */
+
+.bl-ust { display: flex; align-items: center; gap: 14px; }
+.bl-logo {
+  width: 58px; height: 58px; flex: none; padding: 7px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--cizgi); border-radius: 16px; overflow: hidden;
+  /* Logolar çoğunlukla koyu çizimli; koyu temada da seçilsin diye açık
+     zemin. Açık renkli logo (logoLight) koyu zemine oturur. */
+  background: #fff;
+}
+.bl-logo--acik { background: hsl(var(--vurgu-h), 14%, 12%); }
+.bl-logo img { width: 100%; height: 100%; object-fit: contain; }
+.bl-kimlik { min-width: 0; }
+.bl-kimlik h3 { margin: 0; font-family: var(--yazi-baslik); font-size: 21px; line-height: 1.2; text-wrap: balance; }
+.bl-kimlik p { margin: 3px 0 0; font-size: 12.5px; color: var(--sessiz); }
+
+.bl-liste { display: flex; flex-direction: column; }
+.bl-satir {
+  position: relative;
+  display: flex; align-items: center; gap: 13px;
+  width: 100%; min-height: 50px; padding: 13px 0;
+  border-top: 1px solid var(--cizgi);
+  color: var(--murekkep); text-decoration: none; text-align: start;
+  font-size: 15px; letter-spacing: -.005em;
+}
+.bl-satir:first-child { border-top: 0; }
+.bl-satir > svg { color: var(--sessiz); flex: none; }
+.bl-ad { flex: 1 1 auto; min-width: 0; color: var(--sessiz); }
+.bl-deger {
+  display: inline-flex; align-items: center; gap: 7px; flex: 0 1 auto;
+  font-weight: 600; text-align: end;
+}
+a.bl-satir .bl-deger, .bl-satir--dil .bl-deger { color: var(--vurgu-yazi); }
+a.bl-satir, .bl-satir--dil { transition: opacity .15s ease; }
+a.bl-satir:active, .bl-satir--dil:active { opacity: .6; }
+[dir="rtl"] .bl-deger svg { transform: scaleX(-1); }
+/* Dil satırı: görünmez yerel seçici satırın tamamını kaplar. 16 px yazı,
+   iOS'un odaklanınca sayfayı yakınlaştırmasını engeller. */
+.bl-satir--dil { cursor: pointer; }
+.bl-satir--dil select {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; font-size: 16px;
+  -webkit-appearance: none; appearance: none;
+}
+.bl-durum {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .03em;
+  background: var(--diyet); color: var(--diyet-yazi);
+}
+.bl-durum--kapali { background: hsla(4, 75%, 55%, .14); color: hsl(4, 68%, 42%); }
+[data-mod="koyu"] .bl-durum--kapali { color: hsl(4, 85%, 72%); }
+.bl-yildiz { color: hsl(42, 96%, 50%); letter-spacing: 1px; }
+
 /* ------------------------------------------------------- ürün detayı */
 
 .dt-ortu {
@@ -586,6 +660,10 @@ body::before {
 .ust-saat { font-size: 11px; letter-spacing: .14em; color: var(--sessiz); }
 .ust-satir .dil select { background: var(--cam); border-color: var(--cam-cizgi); color: var(--murekkep); }
 .ust-satir .dil select option { background: hsl(var(--gece-h), 38%, 12%); color: var(--murekkep); }
+.ust-satir .bilgi-dugme { background: var(--cam); border-color: var(--cam-cizgi); }
+/* Bilgi kartı cam kutuda; logo çerçevesi ve durum rozeti ona uysun. */
+.bl-logo { border-color: var(--cam-cizgi); }
+.bl-satir { border-top-color: var(--cam-cizgi); }
 
 .ust-kimlik { padding-block: 26px 4px; text-align: center; }
 .ust-logo { max-height: 132px; width: auto; margin: 0 auto; filter: drop-shadow(0 8px 24px hsla(0, 0%, 0%, .35)); }
@@ -703,14 +781,14 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 /*
  * CEPTE MENÜ — PAYLAŞILAN MENÜ MOTORU
  *
- * Dört temanın (vitrin, liste, zarif, günbatımı) ortak mantığı. Tema dosyaları
+ * Dört temanın (kadraj, liste, zarif, günbatımı) ortak mantığı. Tema dosyaları
  * bu motoru gömülü taşır; aralarındaki tek fark CSS ve birkaç şablon işlevidir.
  *
  * Motor hiçbir ağ isteği yapmaz, hiçbir kütüphane kullanmaz. Girdisi tek bir
  * JSON modeli (bkz. OKU.md → "Veri sözleşmesi"), çıktısı tam sayfa menüdür.
  *
  * Deri (skin) sözleşmesi — her tema şu işlevleri sağlar:
- *   skin.ad                      -> "vitrin" | "liste" | "zarif" | "gunbatimi"
+ *   skin.ad                      -> "kadraj" | "liste" | "zarif" | "gunbatimi"
  *   skin.varsayilanMod           -> "acik" | "koyu"
  *   skin.ustBaslik(ctx)          -> HTML  (işletme künyesi)
  *   skin.kategoriCubugu(ctx)     -> HTML  (kategori gezinme)
@@ -935,48 +1013,69 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
   /* ------------------------------------------------------------ sözlükler */
 
   var SOZLUK = {
-    tr: { ara: "Menüde ara", kapat: "Kapat", menu: "MENÜ", porsiyon: "Porsiyon",
+    tr: { bilgi: "Restoran bilgileri", bilgiKisa: "Bilgi", saat: "Çalışma saatleri", telefon: "Telefon", adres: "Adres", yol: "Yol tarifi", puan: "Puan", yorum: "değerlendirme", googleDeg: "Google’da değerlendir",
+          ara: "Menüde ara", kapat: "Kapat", menu: "MENÜ", porsiyon: "Porsiyon",
           icerir: "İçerir", olabilir: "İçerebilir", alerjen: "Alerjen", kalori: "Kalori",
           filtre: "Alerjen filtresi", temizle: "Temizle", sonucYok: "Sonuç bulunamadı",
           ikram: "İkram", porsiyonlar: "Farklı porsiyonlar", tumu: "Tümü", kisi: "kişilik", populer: "Popüler",
           sef: "Şefin seçimi", vejetaryen: "Vejetaryen", vegan: "Vegan",
           kdv: "Fiyatlara KDV dahildir", acik: "Açık", kapali: "Kapalı",
           gizle: "seçili alerjenli ürünler gizlendi", dil: "Dil" },
-    en: { ara: "Search the menu", kapat: "Close", menu: "MENU", porsiyon: "Portion",
+    en: { bilgi: "Restaurant info", bilgiKisa: "Info", saat: "Opening hours", telefon: "Phone", adres: "Address", yol: "Directions", puan: "Rating", yorum: "reviews", googleDeg: "Rate on Google",
+          ara: "Search the menu", kapat: "Close", menu: "MENU", porsiyon: "Portion",
           icerir: "Contains", olabilir: "May contain", alerjen: "Allergen", kalori: "Calories",
           filtre: "Allergen filter", temizle: "Clear", sonucYok: "No results",
           ikram: "Complimentary", porsiyonlar: "Multiple sizes", tumu: "All", kisi: "people", populer: "Popular",
           sef: "Chef's choice", vejetaryen: "Vegetarian", vegan: "Vegan",
           kdv: "VAT included", acik: "Open", kapali: "Closed",
           gizle: "items with selected allergens are hidden", dil: "Language" },
-    de: { ara: "Im Menü suchen", kapat: "Schließen", menu: "MENÜ", porsiyon: "Portion",
+    de: { bilgi: "Restaurantinfos", bilgiKisa: "Info", saat: "Öffnungszeiten", telefon: "Telefon", adres: "Adresse", yol: "Route", puan: "Bewertung", yorum: "Bewertungen", googleDeg: "Auf Google bewerten",
+          ara: "Im Menü suchen", kapat: "Schließen", menu: "MENÜ", porsiyon: "Portion",
           icerir: "Enthält", olabilir: "Kann enthalten", alerjen: "Allergen", kalori: "Kalorien",
           filtre: "Allergenfilter", temizle: "Löschen", sonucYok: "Keine Treffer",
           ikram: "Gratis", porsiyonlar: "Mehrere Größen", tumu: "Alle", kisi: "Personen", populer: "Beliebt",
           sef: "Empfehlung", vejetaryen: "Vegetarisch", vegan: "Vegan",
           kdv: "Inkl. MwSt.", acik: "Geöffnet", kapali: "Geschlossen",
           gizle: "Artikel mit gewählten Allergenen ausgeblendet", dil: "Sprache" },
-    es: { ara: "Buscar en el menú", kapat: "Cerrar", menu: "MENÚ", porsiyon: "Ración",
+    es: { bilgi: "Información del restaurante", bilgiKisa: "Info", saat: "Horario", telefon: "Teléfono", adres: "Dirección", yol: "Cómo llegar", puan: "Valoración", yorum: "reseñas", googleDeg: "Valorar en Google",
+          ara: "Buscar en el menú", kapat: "Cerrar", menu: "MENÚ", porsiyon: "Ración",
           icerir: "Contiene", olabilir: "Puede contener", alerjen: "Alérgeno", kalori: "Calorías",
           filtre: "Filtro de alérgenos", temizle: "Limpiar", sonucYok: "Sin resultados",
           ikram: "Cortesía", porsiyonlar: "Varios tamaños", tumu: "Todo", kisi: "personas", populer: "Popular",
           sef: "Sugerencia del chef", vejetaryen: "Vegetariano", vegan: "Vegano",
           kdv: "IVA incluido", acik: "Abierto", kapali: "Cerrado",
           gizle: "platos con alérgenos seleccionados ocultos", dil: "Idioma" },
-    fr: { ara: "Rechercher", kapat: "Fermer", menu: "MENU", porsiyon: "Portion",
+    fr: { bilgi: "Informations", bilgiKisa: "Infos", saat: "Horaires", telefon: "Téléphone", adres: "Adresse", yol: "Itinéraire", puan: "Note", yorum: "avis", googleDeg: "Noter sur Google",
+          ara: "Rechercher", kapat: "Fermer", menu: "MENU", porsiyon: "Portion",
           icerir: "Contient", olabilir: "Peut contenir", alerjen: "Allergène", kalori: "Calories",
           filtre: "Filtre allergènes", temizle: "Effacer", sonucYok: "Aucun résultat",
           ikram: "Offert", porsiyonlar: "Plusieurs tailles", tumu: "Tout", kisi: "personnes", populer: "Populaire",
           sef: "Choix du chef", vejetaryen: "Végétarien", vegan: "Végan",
           kdv: "TVA incluse", acik: "Ouvert", kapali: "Fermé",
           gizle: "plats avec allergènes sélectionnés masqués", dil: "Langue" },
-    ar: { ara: "ابحث في القائمة", kapat: "إغلاق", menu: "القائمة", porsiyon: "حصة",
+    ar: { bilgi: "معلومات المطعم", bilgiKisa: "معلومات", saat: "ساعات العمل", telefon: "الهاتف", adres: "العنوان", yol: "الاتجاهات", puan: "التقييم", yorum: "مراجعة", googleDeg: "قيّمنا على جوجل",
+          ara: "ابحث في القائمة", kapat: "إغلاق", menu: "القائمة", porsiyon: "حصة",
           icerir: "يحتوي", olabilir: "قد يحتوي", alerjen: "مسببات الحساسية", kalori: "سعرات",
           filtre: "تصفية المواد المسببة للحساسية", temizle: "مسح", sonucYok: "لا توجد نتائج",
           ikram: "ضيافة", porsiyonlar: "أحجام متعددة", tumu: "الكل", kisi: "أشخاص", populer: "الأكثر طلباً",
           sef: "اختيار الشيف", vejetaryen: "نباتي", vegan: "نباتي صرف",
           kdv: "الأسعار شاملة الضريبة", acik: "مفتوح", kapali: "مغلق",
           gizle: "تم إخفاء الأصناف المحددة", dil: "اللغة" }
+  };
+
+  /* Bilgi kartının ikonları — premium menüdekiyle aynı çizim. */
+  var IKON = {
+    bilgi: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>',
+    ok: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>',
+    saat: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    telefon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h4l2 5-3 2a13 13 0 0 0 6 6l2-3 5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2Z"/></svg>',
+    konum: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+    yol: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-8-8 18-2-8-8-2Z"/></svg>',
+    instagram: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg>',
+    facebook: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h-2a4 4 0 0 0-4 4v3H7v4h2v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h2V3Z"/></svg>',
+    tiktok: '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 2h-3v13.2a2.7 2.7 0 1 1-2.2-2.65V9.5a5.8 5.8 0 1 0 5.2 5.77V9.4a6.9 6.9 0 0 0 4 1.28V7.6a3.9 3.9 0 0 1-4-3.9V2Z"/></svg>',
+    yildiz: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3 6.5 7 .9-5 4.9 1.2 7L12 18l-6.2 3.3L7 14.3l-5-4.9 7-.9L12 2Z"/></svg>',
+    dunya: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18Z"/></svg>'
   };
 
   var DIL_ADI = { tr: "Türkçe", en: "English", de: "Deutsch", es: "Español", fr: "Français", ar: "العربية" };
@@ -998,6 +1097,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       arama: "",
       gizli: [],                    /* seçili alerjen anahtarları */
       acikUrun: null,
+      bilgi: false,                 /* restoran bilgi kartı açık mı */
       filtrePaneli: false,
       giris: !!this.karsilamaVar()
     };
@@ -1226,6 +1326,72 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
   /* ------------------------------------------------------- ürün detayı */
 
+  /**
+   * RESTORAN BİLGİ KARTI — premium menüdeki kartın aynısı: saat, telefon,
+   * adres, yol tarifi, sosyal hesaplar, Google puanı/değerlendirme ve dil.
+   * Başlıktaki "Bilgi" düğmesi ya da işletme adı/logosu açar; ürün
+   * detayıyla aynı katmanı kullanır (aşağı çekince, geri tuşuyla kapanır).
+   * Veride olmayan satır hiç çizilmez.
+   */
+  Motor.prototype.bilgiHtml = function () {
+    var i = this.isletme, sz = this.sz(), s = [];
+    var satir = function (ikon, ad, deger) {
+      return '<div class="bl-satir">' + ikon + '<span class="bl-ad">' + kacir(ad) + '</span>' +
+        '<span class="bl-deger">' + deger + '</span></div>';
+    };
+    var bag = function (href, ikon, ad, deger, disari) {
+      return '<a class="bl-satir" href="' + kacir(href) + '"' + (disari ? ' target="_blank" rel="noopener"' : "") + '>' +
+        ikon + '<span class="bl-ad">' + kacir(ad) + '</span><span class="bl-deger">' + (deger || IKON.ok) + '</span></a>';
+    };
+
+    if (i.hours) {
+      var durum = i.isOpen === false ? sz.kapali : i.isOpen === true ? sz.acik : "";
+      s.push(satir(IKON.saat, sz.saat,
+        (durum ? '<span class="bl-durum' + (i.isOpen === false ? " bl-durum--kapali" : "") + '">' + kacir(durum) + '</span> ' : "") +
+        '<bdi dir="ltr">' + kacir(i.hours) + '</bdi>'));
+    }
+    if (i.phone) s.push(bag("tel:" + String(i.phone).replace(/\s/g, ""), IKON.telefon, sz.telefon, '<bdi dir="ltr">' + kacir(i.phone) + '</bdi>'));
+    var yer = [i.district, i.city].filter(Boolean).join(", ");
+    if (i.address || yer) s.push(satir(IKON.konum, sz.adres, kacir(i.address || yer)));
+    if (i.maps) s.push(bag(i.maps, IKON.yol, sz.yol, "", true));
+    if (i.instagram) s.push(bag(i.instagram, IKON.instagram, "Instagram", "", true));
+    if (i.facebook) s.push(bag(i.facebook, IKON.facebook, "Facebook", "", true));
+    if (i.tiktok) s.push(bag(i.tiktok, IKON.tiktok, "TikTok", "", true));
+    /* Puan yalnızca gerçekten varsa: "0.0" kötü bir puan gibi okunuyor. */
+    var puan = Number(i.rating) || 0, adet = Number(i.reviews) || 0;
+    if (puan > 0) {
+      var yuv = Math.max(0, Math.min(5, Math.round(puan)));
+      s.push(satir(IKON.yildiz, sz.puan,
+        '<span class="bl-yildiz" aria-hidden="true">' + new Array(yuv + 1).join("★") + new Array(6 - yuv).join("☆") + '</span> ' +
+        puan.toFixed(1) + (adet ? ' · ' + adet + " " + kacir(sz.yorum) : "")));
+    }
+    if (i.googleReview) s.push(bag(i.googleReview, IKON.yildiz, sz.googleDeg, "", true));
+    /* Dil: satırın üstüne serilmiş görünmez yerel seçici — dokununca
+       telefonun kendi seçim listesi açılır. */
+    if (this.diller.length > 1) {
+      var d = this.durum.dil;
+      s.push('<label class="bl-satir bl-satir--dil">' + IKON.dunya +
+        '<span class="bl-ad">' + kacir(sz.dil) + '</span>' +
+        '<span class="bl-deger">' + kacir(DIL_ADI[d] || d) + IKON.ok + '</span>' +
+        '<select data-dil aria-label="' + kacir(sz.dil) + '">' + this.diller.map(function (k) {
+          return '<option value="' + k + '"' + (k === d ? " selected" : "") + '>' + kacir(DIL_ADI[k] || k) + '</option>';
+        }).join("") + '</select></label>');
+    }
+
+    return '<div class="dt-kutu dt-kutu--yazi dt-kutu--bilgi" role="dialog" aria-modal="true" tabindex="-1" aria-label="' + kacir(sz.bilgi) + '">' +
+      '<div class="dt-tutamac" data-tutamac aria-hidden="true"><span></span></div>' +
+      '<button class="dt-kapat" type="button" data-kapat aria-label="' + kacir(sz.kapat) + '">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+      '</button>' +
+      '<div class="dt-kaydir"><div class="dt-govde">' +
+        '<div class="bl-ust">' +
+          (i.logo ? '<span class="bl-logo' + (i.logoLight ? " bl-logo--acik" : "") + '"><img src="' + kacir(i.logo) + '" alt=""></span>' : "") +
+          '<div class="bl-kimlik"><h3>' + kacir(i.name || "") + '</h3><p>' + kacir(sz.bilgi) + '</p></div>' +
+        '</div>' +
+        '<div class="bl-liste">' + s.join("") + '</div>' +
+      '</div></div></div>';
+  };
+
   Motor.prototype.detayHtml = function (u) {
     var sz = this.sz(), t = this.metin(u), self = this;
     /* Detay görseli lazy OLMAMALI: kutu zaten açıldığı an görünür alandadır,
@@ -1391,11 +1557,11 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     /* Karşılama tam ekran dururken arkadaki menü parmakla kayabiliyordu;
        düğmeye basınca menü ortasında bir yerde açılıyordu. */
     if (this.durum.giris) this.kaydirmaKilidi(true);
-    else if (!this.durum.acikUrun) this.kaydirmaKilidi(false);
+    else if (!this.katmanAcik()) this.kaydirmaKilidi(false);
     this.gorselKancasi();
     /* Karşılama açıkken menü arkada duruyor; ilk ekranı şimdiden hazırla. */
     if (this.durum.giris) this.gorselleriOnHazirla(14);
-    if (this.durum.acikUrun) this.detayCiz();
+    if (this.katmanAcik()) this.detayCiz();
   };
 
   /**
@@ -1465,6 +1631,12 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       rozetler: function (u) { return self.rozetler(u); },
       olculer: function (u) { return self.olculer(u); },
       dilHtml: function () { return self.dilHtml(); },
+      /* Başlıktaki "Bilgi" düğmesi: restoran bilgi kartını açar. */
+      bilgiDugmesi: function () {
+        var sz = self.sz();
+        return '<button type="button" class="bilgi-dugme" data-bilgi-ac aria-haspopup="dialog" aria-label="' + kacir(sz.bilgi) + '">' +
+          IKON.bilgi + '<span>' + kacir(sz.bilgiKisa) + '</span></button>';
+      },
       /* Altbilgi imzası — dört temada da aynı. */
       imza: function () {
         return '<span class="imza">' +
@@ -1529,15 +1701,22 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     }
   };
 
-  /** Açık ürünü kendi katmanında çizer; menünün DOM'una dokunmaz. */
-  Motor.prototype.detayCiz = function () {
-    var self = this, u = this.durum.acikUrun;
-    if (!u) return;
+  /** Açık katman var mı: ürün detayı ya da bilgi kartı. */
+  Motor.prototype.katmanAcik = function () { return !!(this.durum.acikUrun || this.durum.bilgi); };
 
+  /** Açık ürünü (ya da bilgi kartını) kendi katmanında çizer; menünün DOM'una dokunmaz. */
+  Motor.prototype.detayCiz = function () {
+    var u = this.durum.acikUrun;
+    if (u) this.katmanAc(this.detayHtml(u));
+    else if (this.durum.bilgi) this.katmanAc(this.bilgiHtml());
+  };
+
+  Motor.prototype.katmanAc = function (icerik) {
+    var self = this;
     var ortu = document.createElement("div");
     ortu.className = "dt-ortu";
     ortu.setAttribute("data-kapat-ortu", "");
-    ortu.innerHTML = '<div class="dt-perde"></div>' + this.detayHtml(u);
+    ortu.innerHTML = '<div class="dt-perde"></div>' + icerik;
     this.kok.appendChild(ortu);
     this.ortu = ortu;
 
@@ -1583,6 +1762,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
   Motor.prototype.detayKapat = function (kaydirarak, gecmistenGeldi) {
     var self = this, ortu = this.ortu;
     this.durum.acikUrun = null;
+    this.durum.bilgi = false;
 
     /* Kutu dugmeyle/jestle kapandiysa gecmisteki girisi de geri al ki
        geri tusu kullaniciyi bir onceki sayfaya atmasin. */
@@ -2040,14 +2220,22 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
         return;
       }
       if (el.closest("[data-kapat]") || (el.hasAttribute && el.hasAttribute("data-kapat-ortu"))) {
-        if (self.durum.acikUrun) self.detayKapat(false);
+        if (self.katmanAcik()) self.detayKapat(false);
+        return;
+      }
+      var bilgi = el.closest("[data-bilgi-ac]");
+      if (bilgi) {
+        if (self.katmanAcik()) self.detayKapat(false);
+        self.sonTetikleyici = bilgi;
+        self.durum.bilgi = true;
+        self.detayCiz();
         return;
       }
       var urun = el.closest("[data-product]");
       if (urun) {
         var u = self.urunBul(urun.getAttribute("data-product"));
         if (u) {
-          if (self.durum.acikUrun) self.detayKapat(false);
+          if (self.katmanAcik()) self.detayKapat(false);
           self.sonTetikleyici = urun;
           self.durum.acikUrun = u;
           self.detayCiz();
@@ -2058,6 +2246,9 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     this.kok.addEventListener("change", function (e) {
       var el = e.target;
       if (el.hasAttribute("data-dil")) {
+        /* Bilgi kartındaki seçiciden gelindiyse önce kart kapanır; menü
+           yeni dilde baştan kurulur. */
+        if (self.katmanAcik()) self.detayKapat(false);
         self.durum.dil = el.value; self.yerelYaz(); self.ciz(); return;
       }
       if (el.hasAttribute("data-alerjen")) {
@@ -2084,12 +2275,12 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     });
 
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && self.durum.acikUrun) { self.detayKapat(false); }
+      if (e.key === "Escape" && self.katmanAcik()) { self.detayKapat(false); }
     });
 
     /* Geri tusu/jesti: acik kutu varsa once onu kapatir. */
     window.addEventListener("popstate", function () {
-      if (self.durum.acikUrun) self.detayKapat(false, true);
+      if (self.katmanAcik()) self.detayKapat(false, true);
     });
   };
 
@@ -2174,9 +2365,9 @@ window.DERI = {
     return '<header class="ust">' +
       '<div class="ust-satir">' +
         '<span class="ust-saat">' + k(i.hours || "") + '</span>' +
-        c.dilHtml() +
+        '<div class="ust-araclar">' + c.bilgiDugmesi() + c.dilHtml() + '</div>' +
       '</div>' +
-      '<div class="ust-kimlik">' +
+      '<div class="ust-kimlik" data-bilgi-ac>' +
         (i.logo ? '<img class="ust-logo" src="' + k(i.logo) + '" alt="' + k(i.name || "") + '" loading="eager">'
                 : '<h1 class="ust-ad">' + k(i.name || "") + '</h1>') +
         (alt ? '<p class="ust-alt">' + k(alt) + '</p>' : "") +
@@ -2437,7 +2628,7 @@ if (VERI) { window.MENU = new window.MenuMotor(VERI, window.DERI); window.MENU.b
 (function () {
   if (!window.MENU) return;
 
-  var TEMALAR = [["vitrin", "Vitrin"], ["liste", "Liste"], ["zarif", "Zarif"], ["gunbatimi", "Günbatımı"]];
+  var TEMALAR = [["kadraj", "Kadraj"], ["liste", "Liste"], ["zarif", "Zarif"], ["gunbatimi", "Günbatımı"]];
   var MODLAR = [["acik", "Açık"], ["koyu", "Koyu"], ["oto", "Otomatik"]];
 
   /* Her ailede koyu ve canlı tonlar: aynı menünün seçilen renkle nasıl

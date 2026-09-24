@@ -4,7 +4,7 @@ Dört menü temasının çalışan önizlemesi. Örnek veriyle doldurulmuş, sta
 
 | Tema | Kime |
 | --- | --- |
-| Vitrin | Görseli olan restoran, kafe |
+| Kadraj | Görseli olan restoran, kafe (eski adı Vitrin) |
 | Liste | Çok ürünlü fırın, market, büfe |
 | Zarif | Restoran, otel, fine dining |
 | Günbatımı | Havuz başı, sahil, büfe |
