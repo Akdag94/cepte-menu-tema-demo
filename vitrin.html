@@ -140,8 +140,23 @@ button:active, .filtre-oge:active { transform: scale(.975); }
  * görseller hiç görünmüyordu.
  */
 .js-hazir img.yeni-yuklendi { animation: gorselGir .32s ease both; }
+img.gorsel-yok { visibility: hidden; }
 @keyframes gorselGir { from { opacity: 0; } to { opacity: 1; } }
 .govde { padding-block: 8px 48px; }
+
+/*
+ * YAPIŞKAN BLOK — arama, filtre paneli, kategori çubuğu. Menü boyunca
+ * ekranın tepesinde kalır. Motor yüksekliğini --yapiskan-h'ye yazar;
+ * bölümler oraya göre durur, başlıkları çubuğun altında kalmaz.
+ */
+.yapiskan {
+  position: sticky; top: 0; z-index: 30;
+  margin-inline: -16px; padding-inline: 16px;
+  background: var(--zemin);
+}
+/* Çubuk artık kendi başına yapışkan değil; bloğun içinde akar. */
+.katlar { position: relative; }
+.bolum { scroll-margin-top: calc(var(--yapiskan-h, 110px) + 10px); }
 .bos { padding: 56px 0; text-align: center; color: var(--sessiz); }
 
 /* ----------------------------------------------------- karşılama ekranı */
@@ -182,7 +197,11 @@ button:active, .filtre-oge:active { transform: scale(.975); }
   box-shadow: 0 10px 34px hsla(var(--vurgu-h), 60%, 20%, .45);
   transition: transform .18s ease, box-shadow .18s ease;
 }
-.giris-dugme:hover { transform: translateY(-2px); box-shadow: 0 14px 40px hsla(var(--vurgu-h), 60%, 20%, .55); }
+/* Üzerine gelme efektleri yalnızca fareli cihazda: telefonda dokunulan
+   öğede takılı kalıyor, parmak kalktıktan sonra da vurgulu görünüyordu. */
+@media (hover: hover) and (pointer: fine) {
+  .giris-dugme:hover { transform: translateY(-2px); box-shadow: 0 14px 40px hsla(var(--vurgu-h), 60%, 20%, .55); }
+}
 @keyframes girisYukari { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
 
 /* ------------------------------------------------------------- rozetler */
@@ -238,7 +257,11 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 }
 .filtre--acik {
   visibility: visible;
-  max-height: 420px; opacity: 1;
+  /* Yapışkan bloğun içinde: ekranın yarısından fazlasını kaplamasın,
+     taşarsa kendi içinde kaysın. */
+  max-height: 420px; max-height: min(420px, 55vh);
+  overflow-y: auto; overscroll-behavior: contain;
+  opacity: 1;
   margin-block: 10px; padding: 14px;
   border-width: 1px;
 }
@@ -272,7 +295,7 @@ button:active, .filtre-oge:active { transform: scale(.975); }
   appearance: none; -webkit-appearance: none;
   cursor: pointer;
 }
-.dil select:hover { border-color: var(--vurgu); }
+@media (hover: hover) and (pointer: fine) { .dil select:hover { border-color: var(--vurgu); } }
 /* Açılan listedeki satırlar tarayıcının kendi yüzeyinde çizilir; renkleri
    açıkça vermezsek koyu temada okunmayan kombinasyonlar çıkıyor. */
 .dil select option { background: var(--yuzey); color: var(--murekkep); }
@@ -440,7 +463,9 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 .dt-kapat:active { transform: scale(.92); }
 /* aspect-ratio'yu anlamayan cihazlarda gorsel alani yukseklik alamiyordu;
    padding-top yedegi ile 4/3 orani korunur. */
-.dt-gorsel { position: relative; padding-top: 75%; background: var(--yuzey-2); }
+/* overflow: hidden: yoksa kare fotoğraf 4/3 kutuyu kendi boyuna esnetiyor,
+   görsel yüklenince kutu içeriği aşağı zıplıyordu. */
+.dt-gorsel { position: relative; padding-top: 75%; overflow: hidden; background: var(--yuzey-2); }
 .dt-gorsel img { position: absolute; top: 0; left: 0; }
 @supports (aspect-ratio: 4 / 3) {
   .dt-gorsel { aspect-ratio: 4 / 3; padding-top: 0; }
@@ -502,7 +527,9 @@ button:active, .filtre-oge:active { transform: scale(.975); }
   color: var(--sessiz); font-weight: 700; text-decoration: none;
   border-bottom: 1px solid var(--cizgi);
 }
-.imza a:hover { color: var(--vurgu-yazi); border-bottom-color: var(--vurgu-yazi); }
+@media (hover: hover) and (pointer: fine) {
+  .imza a:hover { color: var(--vurgu-yazi); border-bottom-color: var(--vurgu-yazi); }
+}
 
 /* VİTRİN — tipografi, ölçü, düzen. Renkler ortak değişkenlerden gelir. */
 
@@ -525,8 +552,6 @@ button:active, .filtre-oge:active { transform: scale(.975); }
     hsla(var(--vurgu-h), 28%, 6%, .86) 100%);
 }
 .ust-ic {
-  /* Yükseklik kapakla aynı olmalı: arama çubuğu da .ust içinde, bu yüzden
-     inset:0 verilirse kutu onun üstüne taşar ve ad çubuğun arkasında kalır. */
   position: absolute; inset: 0 0 auto; height: 240px;
   padding: 18px 16px 20px;
   display: flex; flex-direction: column; justify-content: space-between;
@@ -563,22 +588,18 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 }
 .ust-yer { margin: 0; font-size: 11.5px; font-weight: 600; letter-spacing: .14em; color: hsla(0, 0%, 100%, .76); }
 
+.yapiskan { border-bottom: 1px solid var(--cizgi); }
 .arama-cubugu {
-  position: sticky; top: 0; z-index: 30;
   display: flex; gap: 10px; align-items: center;
-  padding: 12px 16px;
-  background: var(--zemin);
-  border-bottom: 1px solid var(--cizgi);
+  padding-block: 12px 0;
 }
 
 /* --------------------------------------------------------- kategoriler */
 
 .katlar {
-  position: sticky; top: 66px; z-index: 25;
   display: flex; gap: 8px;
   margin-inline: -16px; padding: 12px 16px;
   overflow-x: auto; scrollbar-width: none;
-  background: var(--zemin);
 }
 .katlar::-webkit-scrollbar { display: none; }
 .kat {
@@ -592,7 +613,7 @@ button:active, .filtre-oge:active { transform: scale(.975); }
 
 /* -------------------------------------------------------------- bölüm */
 
-.bolum { scroll-margin-top: 118px; padding-top: 26px; }
+.bolum { padding-top: 26px; }
 .bolum-ust { margin-bottom: 14px; }
 .bolum-ust h2 {
   margin: 0; font-family: var(--yazi-baslik);
@@ -616,12 +637,14 @@ button:active, .filtre-oge:active { transform: scale(.975); }
   border: 1px solid var(--cizgi); border-radius: 18px;
   background: var(--yuzey); color: inherit; text-align: start;
   box-shadow: var(--golge);
-  transition: transform .18s ease, box-shadow .18s ease;
 }
-.kart:hover { transform: translateY(-2px); box-shadow: 0 14px 32px hsla(var(--vurgu-h), 30%, 20%, .16); }
 .kart--yazi { border-radius: 14px; box-shadow: none; }
 
-.kart-gorsel { position: relative; aspect-ratio: 16 / 9; background: var(--yuzey-2); }
+/* overflow: hidden ŞART. Onsuz aspect-ratio yalnızca bir alt sınırdı: kare
+   fotoğraf yüklenince kutuyu kendi boyuna esnetiyordu. Her görsel
+   yüklendiğinde kart ~150 piksel uzuyor, sayfa kaydırılırken aşağı
+   büyüyor, kategoriye gitme hedefi kaçırıyordu. */
+.kart-gorsel { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--yuzey-2); }
 .kart-gorsel img { width: 100%; height: 100%; object-fit: cover; }
 .kart-rozet { position: absolute; top: 10px; inset-inline-start: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
 .kart-rozet--yazi { padding: 12px 14px 0; }
@@ -683,6 +706,24 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  /**
+   * Etkin kategori düğmesini çubuğun ortasına getirir — yalnızca YATAYDA.
+   * Eskiden scrollIntoView kullanılıyordu; o, sayfanın kendisini de
+   * kaydırmaya aday sayıyor ve süren yumuşak kaydırmayı (kategoriye gitme,
+   * parmakla savurma) yarıda kesebiliyordu.
+   */
+  function cubuguOrtala(cubuk, dugme) {
+    if (!cubuk || !dugme || cubuk.scrollWidth <= cubuk.clientWidth) return;
+    /* Ekrandaki kutulardan hesaplanır: offsetLeft/scrollLeft Arapça (RTL)
+       düzende tarayıcıdan tarayıcıya farklı işaretle geliyor. Sınırın
+       dışına taşan hedefi tarayıcı kendisi kırpar. */
+    var c = cubuk.getBoundingClientRect(), d = dugme.getBoundingClientRect();
+    var fark = (d.left + d.width / 2) - (c.left + c.width / 2);
+    if (Math.abs(fark) < 2) return;
+    if (cubuk.scrollBy) cubuk.scrollBy({ left: fark, behavior: "smooth" });
+    else cubuk.scrollLeft += fark;
   }
 
   /** "#e11d48" -> {h,s,l}. Geçersizse null. */
@@ -1299,8 +1340,20 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       (this.durum.giris ? this.girisHtml() : "") +
       '<div class="sayfa"' + (this.durum.giris ? ' inert aria-hidden="true"' : "") + '>' +
         this.skin.ustBaslik(ctx) +
-        this.skin.kategoriCubugu(ctx) +
-        this.filtreHtml() +
+        /*
+         * Arama, filtre paneli ve kategori çubuğu TEK yapışkan blokta.
+         * Eskiden arama çubuğu başlığın (header) içinde sticky'ydi; sticky
+         * bir öğe ebeveyninin dışına çıkamadığı için başlık kaydırılıp
+         * geçilince arama da onunla gidiyordu, kategori çubuğu ise sabit
+         * `top` değeriyle boşlukta asılı kalıyordu. Filtre paneli de akışın
+         * içindeydi: aşağıdayken açılınca sayfanın tepesinde, görünmeden
+         * açılıyordu.
+         */
+        '<div class="yapiskan" data-yapiskan>' +
+          '<div class="arama-cubugu">' + ctx.aramaHtml() + ctx.filtreDugmesi() + '</div>' +
+          this.filtreHtml() +
+          this.skin.kategoriCubugu(ctx) +
+        '</div>' +
         '<main class="govde" id="govde">' + govde.join("") + '</main>' +
         this.skin.altBilgi(ctx) +
       '</div>';
@@ -1311,6 +1364,7 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     this.kok.innerHTML = html;
     this.ortu = null;
     this.paletiUygula();
+    this.yapiskanOlc();
     this.gozcuKur();
     /* Karşılama tam ekran dururken arkadaki menü parmakla kayabiliyordu;
        düğmeye basınca menü ortasında bir yerde açılıyordu. */
@@ -1743,6 +1797,37 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
 
   /* -------------------------------------------------------- olaylar */
 
+  /**
+   * Yapışkan bloğun yüksekliğini --yapiskan-h olarak yazar. Bölümlerin
+   * kaydırma payı ve Liste'nin yapışkan bölüm başlığı buna göre hizalanır.
+   * Eskiden bu değerler temalarda sabit piksel yazılıydı; filtre paneli
+   * açılınca ya da yazı tipi yüklenince tutmuyor, kategori başlığı çubuğun
+   * altında kalıyordu.
+   */
+  Motor.prototype.yapiskanOlc = function () {
+    var self = this;
+    var el = this.kok.querySelector("[data-yapiskan]");
+    if (!el) return;
+    var olc = function () {
+      var h = Math.round(el.getBoundingClientRect().height);
+      if (!h || h === self.yapiskanH) return;
+      var onceki = self.yapiskanH;
+      self.yapiskanH = h;
+      document.documentElement.style.setProperty("--yapiskan-h", h + "px");
+      /* Gözcünün üst payı da yüksekliğe bağlı; belirgin değişimde yenile. */
+      if (onceki != null && Math.abs(h - onceki) > 6) self.gozcuKur();
+    };
+    olc();
+    if (this.yapiskanGozcu) this.yapiskanGozcu.disconnect();
+    if ("ResizeObserver" in window) {
+      this.yapiskanGozcu = new ResizeObserver(olc);
+      this.yapiskanGozcu.observe(el);
+    } else if (!this.yapiskanDinle) {
+      this.yapiskanDinle = true;
+      window.addEventListener("resize", function () { self.yapiskanOlc(); });
+    }
+  };
+
   Motor.prototype.gozcuKur = function () {
     var self = this;
     var cubuk = this.kok.querySelector("[data-kategori-cubugu]");
@@ -1750,21 +1835,22 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
     var bolumler = this.kok.querySelectorAll("[data-bolum]");
     if (!bolumler.length) return;
     if (this.gozcu) this.gozcu.disconnect();
+    var ustPay = (this.yapiskanH || 88) + 8;
     this.gozcu = new IntersectionObserver(function (girdiler) {
       if (self.gozcuSus) return;
       girdiler.forEach(function (g) {
         if (!g.isIntersecting) return;
         var id = g.target.getAttribute("data-bolum");
+        /* Çubuk süzgeçten sonra yeniden kurulabiliyor; o anki hâlini al. */
+        cubuk = self.kok.querySelector("[data-kategori-cubugu]") || cubuk;
         var dugmeler = cubuk.querySelectorAll("[data-goto]");
         for (var i = 0; i < dugmeler.length; i++) {
           var etkin = dugmeler[i].getAttribute("data-goto") === id;
           dugmeler[i].classList.toggle("etkin", etkin);
-          if (etkin && dugmeler[i].scrollIntoView) {
-            dugmeler[i].scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
-          }
+          if (etkin) cubuguOrtala(cubuk, dugmeler[i]);
         }
       });
-    }, { rootMargin: "-88px 0px -70% 0px", threshold: 0 });
+    }, { rootMargin: "-" + ustPay + "px 0px -70% 0px", threshold: 0 });
     for (var i = 0; i < bolumler.length; i++) this.gozcu.observe(bolumler[i]);
   };
 
@@ -1789,6 +1875,14 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
       el.__girdi = true;
       el.classList.add("yeni-yuklendi");
       setTimeout(function () { el.classList.remove("yeni-yuklendi"); }, 420);
+    }, true);
+
+    /* Yüklenemeyen görsel kırık resim simgesi ve üstüne taşan alt metinle
+       kartı bozuyordu (görsel sunucusu kapalıyken bütün menü böyle
+       görünüyordu). Gizlenir; yerinde kartın sade görsel zemini kalır. */
+    kok.addEventListener("error", function (e) {
+      var el = e.target;
+      if (el && el.tagName === "IMG") el.classList.add("gorsel-yok");
     }, true);
   };
 
@@ -1870,14 +1964,37 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
           /* Yumuşak kaydırma sürerken gözcü aradan geçen her kategoriyi
              etkin işaretliyor, çubuk da onlara kayıyordu: varış noktasına
              kadar gözcüyü susturup hedefi hemen etkin yapıyoruz. */
+          /* Uzun menüde yumuşak kaydırma bir saniyeyi aşabiliyor; sabit
+             700 ms'lik susma yetmiyor, çubuk yolda titriyordu. Kaydırma
+             bitince (scrollend) açılır; olayı tanımayan tarayıcıda kaydırma
+             olayları 160 ms kesilince. */
           self.gozcuSus = true;
           clearTimeout(self.gozcuZaman);
-          self.gozcuZaman = setTimeout(function () { self.gozcuSus = false; }, 700);
+          if (self.gozcuBitis) window.removeEventListener("scroll", self.gozcuBitis);
+          var ac = function () {
+            clearTimeout(self.gozcuZaman);
+            window.removeEventListener("scroll", self.gozcuBitis);
+            window.removeEventListener("scrollend", self.gozcuBitis);
+            self.gozcuBitis = null;
+            self.gozcuSus = false;
+          };
+          if ("onscrollend" in window) {
+            self.gozcuBitis = ac;
+            window.addEventListener("scrollend", ac, { once: true });
+            self.gozcuZaman = setTimeout(ac, 4000);
+          } else {
+            self.gozcuBitis = function () {
+              clearTimeout(self.gozcuZaman);
+              self.gozcuZaman = setTimeout(ac, 160);
+            };
+            window.addEventListener("scroll", self.gozcuBitis, { passive: true });
+            self.gozcuZaman = setTimeout(ac, 900);
+          }
           var cubuk = self.kok.querySelector("[data-kategori-cubugu]");
           if (cubuk) {
             var hepsi = cubuk.querySelectorAll("[data-goto]");
             for (var i = 0; i < hepsi.length; i++) hepsi[i].classList.toggle("etkin", hepsi[i] === git);
-            git.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+            cubuguOrtala(cubuk, git);
           }
           hedef.scrollIntoView({ behavior: "smooth", block: "start" });
         }
@@ -2002,7 +2119,6 @@ window.DERI = {
           (yer ? '<p class="ust-yer">' + k(yer.toLocaleUpperCase("tr")) + '</p>' : "") +
         '</div>' +
       '</div>' +
-      '<div class="arama-cubugu">' + c.aramaHtml() + c.filtreDugmesi() + '</div>' +
     '</header>';
   },
 
