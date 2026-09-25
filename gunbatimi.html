@@ -1010,11 +1010,19 @@ var VERI = {"rapor":{"katlanan":23,"fiyatDegisen":87,"eslesmeyen":[],"fiyatsiz":
    * Ürünün fiyat metni. BİLEREK tek değer: aralık göstermek kartta iki
    * fiyat yazıyormuş gibi duruyordu. Porsiyonların ayrı fiyatları ürün
    * detayındaki porsiyon tablosunda zaten satır satır yazıyor.
-   * 0 fiyat "İkram" sayılır.
+   * Yalnız bilerek 0 girilmiş fiyat "İkram" sayılır. Fiyatı hiç girilmemiş
+   * ürün (null) ikram DEĞİLDİR: porsiyonu varsa en düşük porsiyon fiyatı,
+   * yoksa boş gösterilir (müşteri bedava sanmasın).
    */
   function fiyatMetni(u, sz) {
-    if (!u.price && !u.priceMax) return sz.ikram;
-    return paraTL(u.price || u.priceMax);
+    if (u.price || u.priceMax) return paraTL(u.price || u.priceMax);
+    var enAz = null;
+    for (var i = 0; i < (u.portions || []).length; i++) {
+      var f = u.portions[i].price;
+      if (f > 0 && (enAz === null || f < enAz)) enAz = f;
+    }
+    if (enAz !== null) return paraTL(enAz);
+    return u.price === 0 ? sz.ikram : "";
   }
 
   /* ------------------------------------------------------------ sözlükler */
